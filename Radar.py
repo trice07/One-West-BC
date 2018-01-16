@@ -43,6 +43,7 @@ class Radar:
             elif self.enemy_locations[unit.id].location != unit.location:
                 self.enemy_locations[unit.id] = unit
                 self.new_enemy_updates[unit.location.map_location()] = unit
+        return vecunit
 
     def clear_new_updates(self):
         self.new_enemy_updates = {}
