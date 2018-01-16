@@ -6,9 +6,9 @@ directions=list(bc.Direction) #Stores all directions as a list
 random.seed(1) #Random seeding for testing. Will be removed
 arrived=[] #List of units who got close to the objective
 
-def manage_rangers(gc, unit, my_team, enemy_center):
+def manage_mages(gc, unit, my_team, enemy_center):
     """
-    Runs all of the rangers. Takes in a GameController object and a unit as
+    Runs all of the mages. Takes in a GameController object and a unit as
     inputs.
     """
     global arrived
@@ -21,7 +21,7 @@ def manage_rangers(gc, unit, my_team, enemy_center):
         enemy_team=bc.Team.Blue
     else:
         enemy_team=bc.Team.Red
-    nearby=gc.sense_nearby_units_by_team(location.map_location(), 70, enemy_team)
+    nearby=gc.sense_nearby_units_by_team(location.map_location(), 30, enemy_team)
     if len(nearby)==0:
         if unit in arrived: #If the unit has already moved to the center of the enmy position, move randomly until it detects something
             Move.random_movement(gc, unit, direction)
