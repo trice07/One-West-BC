@@ -13,11 +13,11 @@ class Radar:
                 ml = bc.MapLocation(earth.planet, i, j)
                 toadd = Radar.get_init_type(ml, earth)
                 if toadd["karb"] != 0:
-                    self.karboniteLocations.append(ml)
+                    self.earth_karboniteLocations.append(ml)
                 coords = Radar.get_coordinates(ml)
                 earth_map[coords] = toadd
         for unit in units:
-            location = unit.location.map_location()
+            location = Radar.get_coordinates(unit.location)
             # earth_map[location]["unit"] = unit
             # earth_map[location]["foe"] = False
             earth_map[location]["passable"] = False

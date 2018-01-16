@@ -1,13 +1,11 @@
 import battlecode as bc
 import Navigation
 from Radar import Radar
-from Globals import Globals
-
-
+import run
 
 
 def send_radar_info(unit, gc):
-    nearby_enemies = gc.get_team_array(gc.planet)[0].update_radar(gc, unit)
+    nearby_enemies = run.Glob.radar.update_radar(gc, unit)
     return nearby_enemies
 
 
@@ -73,6 +71,7 @@ def round(unit, gc):
         Navigation.retreat(gc, unit)
         return
     if kill(unit, nearby_enemies, gc):
+        print("Popped")
         return
 
     # NEEF DESTINATION IN LINE BELOW
