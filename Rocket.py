@@ -13,17 +13,26 @@ def manage_rockets(gc, unit, mars_width, mars_height, mars_passable_map):
     #Rocket.unload if on Mars
     #Disentigrate the rocket
     location=unit.location
+
     if location.is_on_map():
-        if len(unit.structure_garrison())>0:
-            destination=find_landing(mars_width, mars_height, mars_passable_map)
-            if gc.can_launch_rocket(unit.id, destination):
-                gc.launch_rocket(unit.id, destination)
+        print(unit.id, "ROCKET ON MAP")
+    if unit.structure_is_built():
+        print(unit.id, "ROCKET IS BUILT")
+    if len(unit.structure_garrison())>0:
+        print(unit.id, "SHIT IN GARRISON")
+        destination=find_landing(mars_width, mars_height, mars_passable_map)
+        if gc.can_launch_rocket(unit.id, destination):
+            print(unit.id, "ROCKET CAN LAUNCH")
+            gc.launch_rocket(unit.id, destination)
+
+
 
 def find_landing(mars_width, mars_height, passable_mars_map):
     """
 
     """
-    i=random.choice(list(passable_mars_map))
-    while passable_mars_map[i]==False:
-       i=random.choice(list(passable_mars_map))
-    return bc.MapLocation(bc.Planet.Mars, i[0], i[1])
+    for i in range(mars_width):
+        for j in range(mars_height):
+            location = bc.MapLocation(bc.Planet.Mars, i, j)
+            if passable_mars_map.is_passable_terrain_at(location):
+                return location
