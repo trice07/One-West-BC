@@ -1,5 +1,6 @@
 import battlecode as bc
 
+
 class Radar:
     def __init__(self, earth, mars):
         mars_map = {}
@@ -13,7 +14,8 @@ class Radar:
                 toadd = Radar.get_init_type(ml, earth)
                 if toadd["karb"] != 0:
                     self.karboniteLocations.append(ml)
-                earth_map[ml] = toadd
+                coords = Radar.get_coordinates(ml)
+                earth_map[coords] = toadd
         for unit in units:
             location = unit.location.map_location()
             # earth_map[location]["unit"] = unit
@@ -23,7 +25,8 @@ class Radar:
             for j in range(mars.height):
                 ml = bc.MapLocation(mars.planet, i, j)
                 toadd = Radar.get_init_type(ml, mars)
-                mars_map[ml] = toadd
+                coords = Radar.get_coordinates(ml)
+                mars_map[coords] = toadd
         self.earth_map = earth_map
         self.mars_map = mars_map
         self.enemy_locations = {}
@@ -111,6 +114,10 @@ class Radar:
     def get_carb_amount(self, planet, location):
         if isinstance(location, bc.Location):
             location = location.map_location()
+        if isinstance(location, bc.MapLocation):
+            x = location.x
+            y = location.y
+            location = (x, y)
         if planet == bc.Planet.Mars:
             return self.mars_map[location]["karb"]
         if planet == bc.Planet.Earth:
@@ -122,6 +129,10 @@ class Radar:
     def get_unit_at_location(self, planet, location):
         if isinstance(location, bc.Location):
             location = location.map_location()
+        if isinstance(location, bc.MapLocation):
+            x = location.x
+            y = location.y
+            location = (x, y)
         if planet == bc.Planet.Mars:
             return self.mars_map[location]["unit"]
         if planet == bc.Planet.Earth:
@@ -133,6 +144,10 @@ class Radar:
     def is_unit_at_location_foe(self, planet, location):
         if isinstance(location, bc.Location):
             location = location.map_location()
+        if isinstance(location, bc.MapLocation):
+            x = location.x
+            y = location.y
+            location = (x, y)
         if planet == bc.Planet.Mars:
             return self.mars_map[location]["foe"]
         if planet == bc.Planet.Earth:
@@ -144,6 +159,10 @@ class Radar:
     def is_terrain_passable(self, planet, location):
         if isinstance(location, bc.Location):
             location = location.map_location()
+        if isinstance(location, bc.MapLocation):
+            x = location.x
+            y = location.y
+            location = (x, y)
         if planet == bc.Planet.Mars:
             return self.mars_map[location]["passable"]
         if planet == bc.Planet.Earth:
@@ -152,13 +171,13 @@ class Radar:
             print("Planet type not specified, make sure planet is a Planet object.")
             raise TypeError
 
-    def update_karb_amount(self, location, gc):
+    def update_karb_amount(self, location, gc, coords):
         if location.planet == bc.Planet.Earth:
-            self.earth_map[location]["karb"] = gc.karbonite_at(location)
+            self.earth_map[coords]["karb"] = gc.karbonite_at(location)
             if gc.karbonite_at(location) == 0:
                 self.earth_karboniteLocations.remove(location)
         elif location.planet == bc.Planet.Mars:
-            self.mars_map[location]["karb"] = gc.karbonite_at(location)
+            self.mars_map[coords]["karb"] = gc.karbonite_at(location)
             if gc.karbonite_at(location) == 0:
                 self.mars_karboniteLocations.remove(location)
             elif location not in self.mars_karboniteLocations:
