@@ -1,15 +1,18 @@
 import battlecode as bc
 
-
 class Radar:
     def __init__(self, earth, mars):
         mars_map = {}
         earth_map = {}
+        self.earth_karboniteLocations = []
+        self.mars_karboniteLocations = []
         units = earth.initial_units
         for i in range(earth.width):
             for j in range(earth.height):
                 ml = bc.MapLocation(earth.planet, i, j)
                 toadd = Radar.get_init_type(ml, earth)
+                if toadd["karb"] != 0:
+                    self.karboniteLocations.append(ml)
                 earth_map[ml] = toadd
         for unit in units:
             location = unit.location.map_location()
@@ -25,6 +28,7 @@ class Radar:
         self.mars_map = mars_map
         self.enemy_locations = {}
         self.new_enemy_updates = {}
+
 
     def update_radar(self, gc, unit):
         if unit.team == bc.Team.Red:
@@ -43,7 +47,21 @@ class Radar:
     def clear_new_updates(self):
         self.new_enemy_updates = {}
 
+
     def find_closest_target(self, unit):
+        best = None
+        target = None
+        me = unit.location.map_location()
+        for enemy in self.enemy_locations:
+            them = self.enemy_locations[enemy].location.maplocation()
+            distance = me.distance_squared_to(them)
+            if best == None or distance < best:
+                best = distance
+                target = them
+        return target
+
+
+    def find_closest_attackable_target(self, unit):
         best = None
         target = None
         me = unit.location.map_location()
@@ -136,6 +154,16 @@ class Radar:
     def update_karb_amount(self, location, gc):
         if location.planet == bc.Planet.Earth:
             self.earth_map[location]["karb"] = gc.karbonite_at(location)
+            if gc.karbonite_at(location) == 0:
+                self.earth_karboniteLocations.remove(location)
         elif location.planet == bc.Planet.Mars:
             self.mars_map[location]["karb"] = gc.karbonite_at(location)
+            if gc.karbonite_at(location) == 0:
+                self.mars_karboniteLocations.remove(location)
+            elif location not in self.mars_karboniteLocations:
+                self.mars_karboniteLocations.append(location)
+
+
+
+
 
