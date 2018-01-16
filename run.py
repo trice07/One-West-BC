@@ -1,11 +1,14 @@
 import battlecode as bc
 import Factory
+import Healer
+import Knight
+import Mage
 import Map
 import sys
 import traceback
+import Ranger
 import Research
 import Rocket
-import Soldier
 import Worker
 
 ###Pre-Game###
@@ -36,11 +39,17 @@ while True:
     try:
         ###Unit Controls###
         for unit in gc.my_units():
-            if unit.location.is_on_map() and not unit.location.is_in_space():
+            if unit.location.is_on_map():
                 if unit.unit_type==bc.UnitType.Worker:
                     Worker.manage_worker(gc, unit)
-                elif unit.unit_type==bc.UnitType.Healer or unit.unit_type==bc.UnitType.Knight or unit.unit_type==bc.UnitType.Mage or unit.unit_type==bc.UnitType.Ranger:
-                    Soldier.manage_soldiers(gc, unit, my_team, earth_enemy_center)
+                elif unit.unit_type==bc.UnitType.Healer:
+                    Healer.manage_healers(gc, unit, my_team)
+                elif unit.unit_type==bc.UnitType.Knight:
+                    Knight.manage_knights(gc, unit, my_team, earth_enemy_center)                   
+                elif unit.unit_type==bc.UnitType.Mage:
+                    Mage.manage_mages(gc, unit, my_team, earth_enemy_center)
+                elif unit.unit_type==bc.UnitType.Ranger:
+                    Ranger.manage_rangers(gc, unit, my_team, earth_enemy_center)
                 elif unit.unit_type==bc.UnitType.Factory:
                     Factory.factory_manager(gc, unit)
                 #elif unit.unit_type==bc.UnitType.Rocket:

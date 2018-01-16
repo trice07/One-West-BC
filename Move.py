@@ -33,6 +33,19 @@ def Bug(gc, unit, destination, defense=False):
         else:
             startBugging(gc, unit, location, direction, destination)
 
+def find_closest_target(unit, nearby, my_team):
+        best=None
+        target=None
+        me=unit.location.map_location()
+        for enemy in nearby:
+            if enemy.team!=my_team:
+                them=enemy.location.map_location()
+                distance=me.distance_squared_to(them)
+                if best==None or distance<best:
+                    best=distance
+                    target=them
+        return target
+
 def isDangerousLocation(gc, unit, location):
     """
     Determines whether enemy can attack a given location
@@ -52,6 +65,14 @@ def isDangerousLocation(gc, unit, location):
             if evilRobot.attackrange() < location.distance_squared_to(evilRobot.location.map_location()):
                 return True
     return False
+
+def random_movement(gc, unit, direction):
+    """
+    Moves the robot in a random direction. Takes a GameController object, a unit,
+    and a direction as inputs.
+    """
+    if gc.is_move_ready(unit.id) and gc.can_move(unit.id, direction):
+        gc.move_robot(unit.id, direction)
 
 def retreat(gc, unit):
     """
