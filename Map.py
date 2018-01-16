@@ -1,7 +1,7 @@
 import battlecode as bc
 import json
 
-def enemy_center(enemy_map, planet):
+def get_enemy_center(enemy_map, planet):
     """
     Takes an enemy map as an input. Using the known enemy locations it
     calculates their center point and returns it as a MapLocation object.
@@ -16,6 +16,22 @@ def enemy_center(enemy_map, planet):
         center_x+=i[0]
         center_y+=i[1]
     return bc.MapLocation(planet, center_x//count, center_y//count) #Returns a MapLocation object that is at the center of the enmy forces
+
+def get_enemy_map(game_map, my_team):
+    """
+    Takes a game_map and the users team as inputs. Returns a dictionary where
+    the enemy location is a tuple (x, y) and the unit type is the value.
+    """
+    enemy_map={} #The return value
+    enemies=game_map["initial_units"] #The dictionary of all units at the start of a game
+    if str(my_team)=="Team.Red": #Set the team to a readable string for red
+        my_team="Red"
+    else: #Set the team to a readable string for blue
+        my_team="Blue"
+    for i in enemies: #Loops through all units and if they are not on our team, fills the enemy_map dictionary
+        if i["team"]!=my_team:
+            enemy_map[(i["location"]["OnMap"]["x"], i["location"]["OnMap"]["y"])]=i["unit_type"]
+    return enemy_map
 
 def get_karbonite_map(game_map):
     """
@@ -40,22 +56,6 @@ def get_karbonite_map(game_map):
         for k in range(len(temp_locs)):
             karbonite_map[temp_locs[k]]=temp_karbonite[k]
     return karbonite_map
-
-def get_enemy_map(game_map, my_team):
-    """
-    Takes a game_map and the users team as inputs. Returns a dictionary where
-    the enemy location is a tuple (x, y) and the unit type is the value.
-    """
-    enemy_map={} #The return value
-    enemies=game_map["initial_units"] #The dictionary of all units at the start of a game
-    if my_team=="Team.Red": #Set the team to a readable string for red
-        my_team="Red"
-    else: #Set the team to a readable string for blue
-        my_team="Blue"
-    for i in enemies: #Loops through all units and if they are not on our team, fills the enemy_map dictionary
-        if i["team"]!=my_team:
-            enemy_map[(i["location"]["OnMap"]["x"], i["location"]["OnMap"]["y"])]=i["unit_type"]
-    return enemy_map
 
 def get_map_size(game_map):
     """
@@ -126,8 +126,12 @@ def is_passable(passable_map, location):
     y=location.y
     return bool(passable_map[(x,y)])
 
-def update_enemy_map():
+def update_karbonite_map(karbonite_map, location, karbonite_value):
     """
+    Updates the amount of karbonite at a given square. Takes in a karbonite map, a
+    Location object, and a karbonite value as inputs.
+    """
+    karbointe_map[(location.map_location().x, location.map_location.y)]=karbonite_value
 
-    """
-    pass
+
+    

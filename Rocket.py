@@ -6,22 +6,19 @@ random.seed(1) #Random seeding for testing. Will be removed
 
 def manage_rockets(gc, unit, mars_width, mars_height, mars_passable_map):
     """
-
+    Manages how rockets behave. Takes in a GameController object, the width
+    and height of Mars, and a passable Mars map (dictionary) as inputs.
     """
-    #Check unit garrison
-    #Can the rocket launch
-    #Rocket.unload if on Mars
-    #Disentigrate the rocket
     location=unit.location
-    if location.is_on_map():
-        if len(unit.structure_garrison())>0:
-            destination=find_landing(mars_width, mars_height, mars_passable_map)
-            if gc.can_launch_rocket(unit.id, destination):
-                gc.launch_rocket(unit.id, destination)
+    if len(unit.structure_garrison())==0:
+        destination=find_landing(mars_width, mars_height, mars_passable_map)
+        if gc.can_launch_rocket(unit.id, destination):
+            gc.launch_rocket(unit.id, destination)
 
 def find_landing(mars_width, mars_height, passable_mars_map):
     """
-
+    Picks a random valid landing space on Mars. Takes in the width and height of
+    Mars and a passable Mars map of Mars (dctionary) as inputs.
     """
     i=random.choice(list(passable_mars_map))
     while passable_mars_map[i]==False:
