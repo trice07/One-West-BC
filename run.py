@@ -1,12 +1,14 @@
 import battlecode as bc
 import Factory
+import Healer
+import Knight
+import Mage
 import Map
 import sys
 import traceback
-import Units
+import Ranger
 import Research
 import Rocket
-import Soldier
 import Worker
 
 ###Pre-Game###
@@ -14,13 +16,13 @@ import Worker
 gc=bc.GameController() #Creates a game controller to connect to a running game
 my_team=gc.team()#Stores our teams color 
 Research.fill_research_queue(gc) #Fills the research queue
-factories, rockets, soldiers, workers=Units.split_units(gc) #Organizes the units by type
 
 earth_map=Map.initialize_earth_map(gc) #Gets the earth GameMap represented as a dictionary for Earth
 earth_enemy_map=Map.get_enemy_map(earth_map, my_team) #Gets the initial enemy map of Earth
 earth_karbonite_map=Map.get_karbonite_map(earth_map) #Gets the initial karbonite map of Earth
 earth_passable_map=Map.get_passable_map(earth_map) #Gets the passable map of Earth
 earth_width, earth_width=Map.get_map_size(earth_map) #Gets the dimensions of Earth
+earth_enemy_center=Map.get_enemy_center(earth_enemy_map, bc.Planet.Earth) #The center of starting enemy units on Earth
 
 mars_map=Map.initialize_mars_map(gc) #Gets the mars GameMap represented as a dictionary for Earth
 mars_enemy_map=Map.get_enemy_map(mars_map, my_team) #Gets the initial enemy_map of Mars
@@ -36,20 +38,23 @@ while True:
         
     try:
         ###Unit Controls###
-        
-        for unit in workers: #Workers must go first so that they have a chance to mine and replicate
-            Worker.manage_worker(gc, unit)
-        for unit in soldiers: #Soldiers must go before factories as well so that the unloaded soldiers can move out of the way
-            Soldier.manage_soldiers(gc, unit, my_team)
-        #for unit in factories:
-            #Factory.factory_manager(gc, unit, factories, rockets, soldiers, workers)
-        #for unit in rockets:
-            #Rocket.manage_rockets(gc, unit, mars_width, mars_height, mars_passable_map)
+        for unit in gc.my_units():
+            if unit.location.is_on_map():
+                if unit.unit_type==bc.UnitType.Worker:
+                    Worker.manage_worker(gc, unit)
+                elif unit.unit_type==bc.UnitType.Healer:
+                    Healer.manage_healers(gc, unit, my_team)
+                elif unit.unit_type==bc.UnitType.Knight:
+                    Knight.manage_knights(gc, unit, my_team, earth_enemy_center)                   
+                elif unit.unit_type==bc.UnitType.Mage:
+                    Mage.manage_mages(gc, unit, my_team, earth_enemy_center)
+                elif unit.unit_type==bc.UnitType.Ranger:
+                    Ranger.manage_rangers(gc, unit, my_team, earth_enemy_center)
+                elif unit.unit_type==bc.UnitType.Factory:
+                    Factory.factory_manager(gc, unit)
+                #elif unit.unit_type==bc.UnitType.Rocket:
+                    #Rocket.manage_rockets(gc, unit, mars_width, mars_height, mars_passable_map)
     
-        ###End of Turn Updates###
-
-        factories, rockets, soldiers, workers=Units.update_units(gc) #Update our units at the end of a turn
-
     #Allows us to locate errors in the code
     except Exception as e:
         print('Error:', e)
