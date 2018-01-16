@@ -132,7 +132,8 @@ def retreat(gc, unit):
     enemy = bc.Team.red if gc.team() == bc.Team.blue else bc.Team.blue
     enemies = gc.sense_nearby_units_by_team(currentLocation, 50, enemy)
     central = findEnemyCenter(gc, enemies)
-    Bug(gc, unit, central, True)
+    reflection = reflectPoint(central)
+    Bug(gc, unit, reflection, True)
 
 
 def findEnemyCenter(gc, enemies):
@@ -152,6 +153,13 @@ def findEnemyCenter(gc, enemies):
             ylocs.append(satan.unit_location.map_location().y)
     center = bc.MapLocation(gc.planet(), sum(xlocs)/len(xlocs), sum(ylocs)/ len(ylocs))
     return center
+
+def reflectPoint(location):
+    x = location.x
+    y = location.y
+    d = (x + y)/ 2
+    newPt = bc.MapLocation(location.planet, 2*d - x, 2*d - y)
+    return newPt
 
 
 
