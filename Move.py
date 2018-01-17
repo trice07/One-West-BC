@@ -33,17 +33,16 @@ def Bug(gc, unit, destination, defense=False):
         else:
             startBugging(gc, unit, location, direction, destination)
 
-def find_closest_target(unit, nearby, my_team):
+def find_closest_target(unit, enemy_map, planet):
         best=None
-        target=None
+        target=bc.MapLocation(bc.Planet.Earth, -1, -1)
         me=unit.location.map_location()
-        for enemy in nearby:
-            if enemy.team!=my_team:
-                them=enemy.location.map_location()
-                distance=me.distance_squared_to(them)
-                if best==None or distance<best:
-                    best=distance
-                    target=them
+        for enemy in enemy_map:
+            them=bc.MapLocation(planet, enemy[0], enemy[1])
+            distance=me.distance_squared_to(them)
+            if best==None or distance<best:
+                best=distance
+                target=them
         return target
 
 def isDangerousLocation(gc, unit, location):

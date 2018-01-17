@@ -19,10 +19,10 @@ def get_enemy_center(enemy_map, planet):
 
 def get_enemy_map(game_map, my_team):
     """
-    Takes a game_map and the users team as inputs. Returns a dictionary where
-    the enemy location is a tuple (x, y) and the unit type is the value.
+    Takes a game_map and the users team as inputs. Returns a list where
+    the enemy location is a tuple (x, y)..
     """
-    enemy_map={} #The return value
+    enemy_map=[] #The return value
     enemies=game_map["initial_units"] #The dictionary of all units at the start of a game
     if str(my_team)=="Team.Red": #Set the team to a readable string for red
         my_team="Red"
@@ -30,7 +30,7 @@ def get_enemy_map(game_map, my_team):
         my_team="Blue"
     for i in enemies: #Loops through all units and if they are not on our team, fills the enemy_map dictionary
         if i["team"]!=my_team:
-            enemy_map[(i["location"]["OnMap"]["x"], i["location"]["OnMap"]["y"])]=i["unit_type"]
+            enemy_map.append((i["location"]["OnMap"]["x"], i["location"]["OnMap"]["y"]))
     return enemy_map
 
 def get_karbonite_map(game_map):
@@ -126,12 +126,34 @@ def is_passable(passable_map, location):
     y=location.y
     return bool(passable_map[(x,y)])
 
+def update_enemy_map(gc, my_team, enemy_map):
+    """
+    Updates the enemy map by scanning all visible enemies from each units
+    location. Takes a GameController object, my_team, and an enemy_map as
+    inputs.
+    """
+    enemy_map=[]
+    my_team=None
+    if my_team==bc.Team.Red: #Sets the value for the enmy team
+        enemy_team=bc.Team.Blue
+    else:
+        enemy_team=bc.Team.Red
+    for unit in gc.my_units(): #Loops through all friendly units
+        if unit.location.is_on_map():
+            nearby=gc.sense_nearby_units_by_team(unit.location.map_location(), unit.vision_range, enemy_team)
+            for other in nearby: #Loops through all units within that units vision
+                if (other.location.map_location().x, other.location.map_location().y) not in enemy_map: #If it hasnt already been detected yet, add it to the enemy_map
+                    enemy_map.append((other.location.map_location().x, other.location.map_location().y))
+    return enemy_map
+
 def update_karbonite_map(karbonite_map, location, karbonite_value):
     """
     Updates the amount of karbonite at a given square. Takes in a karbonite map, a
     Location object, and a karbonite value as inputs.
     """
     karbointe_map[(location.map_location().x, location.map_location.y)]=karbonite_value
+
+
 
 
     
