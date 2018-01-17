@@ -9,26 +9,20 @@ def send_radar_info(unit, gc):
 
 
 def try_to_retreat(unit, dangerous_enemies):
-    ah_time_to_run = False
+    e = None
     for e in dangerous_enemies:
         if e.unit_type == bc.UnitType.Ranger:
-            ah_time_to_run = True
-            break
+            return True, e
         elif e.unit_type == bc.UnitType.Knight:
             if unit.location.is_within_range(3, e.location):
-                ah_time_to_run = True
-                break
+                return True, e
         elif e.unit_type == bc.UnitType.Mage:
             if unit.location.is_within_range(30, e.location):
-                ah_time_to_run = True
-                break
+                return True, e
         elif e.unit_type == bc.UnitType.Factory:
             if unit.location.is_within_range(30, e.location):
-                ah_time_to_run = True
-                break
-    if ah_time_to_run:
-        return True
-    return False
+                return True, e
+    return False, e
 
 
 def kill(unit, nearby_enemies, gc):
@@ -38,7 +32,6 @@ def kill(unit, nearby_enemies, gc):
         if e.unit_type == bc.UnitType.Worker:
             if gc.can_attack(unit.id, e.id):
                 best = e.id
-                priority = 0
                 break
         elif e.unit_type == bc.UnitType.Healer:
             if gc.can_attack(unit.id, e.id):
@@ -73,20 +66,17 @@ def kill(unit, nearby_enemies, gc):
 
 def turn(gc, unit):
     nearby_enemies = send_radar_info(unit, gc)
-    if gc.is_move_ready(unit.id) and try_to_retreat(unit, nearby_enemies):
-        Navigation.retreat(gc, unit)
-        print("RETREATTTTTTTTTTTTTTTTT")
+    if gc.is_move_ready(unit.id):
+        retreat, enemy = try_to_retreat(unit, nearby_enemies)
+        if retreat:
+            moved = Navigation.retreatFromKnownEnemy(gc, unit, enemy)
+            if moved:
+                return
+    if gc.is_attack_ready(unit.id) and kill(unit, nearby_enemies, gc):
         return
-    elif gc.is_attack_ready(unit.id) and kill(unit, nearby_enemies, gc):
-        print("Popped")
-        return
-    elif gc.is_move_ready(unit.id):
-        print("MOVE RANDOM")
+    if gc.is_move_ready(unit.id):
         destination = Globals.earth_enemy_center
         Navigation.Bug(gc, unit, destination)
-
-
-
 
 
 # =======

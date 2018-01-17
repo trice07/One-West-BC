@@ -3,5 +3,6 @@ import battlecode as bc
 
 radar = None
 earth_enemy_center = None
+our_players = {}
 
 
