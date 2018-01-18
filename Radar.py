@@ -32,25 +32,23 @@ class Radar:
         self.enemy_locations = {}
         self.new_enemy_updates = {}
 
-
     def update_radar(self, gc, unit):
         if unit.team == bc.Team.Red:
             team = bc.Team.Blue
         else:
             team = bc.Team.Red
-        vecunit = gc.sense_nearby_units_by_team(unit.location, unit.vision_range, team)
-        for unit in vecunit:
-            if unit.id not in self.enemy_locations:
-                self.enemy_locations[unit.id] = {unit}
-                self.new_enemy_updates[unit.location.map_location()] = unit
-            elif self.enemy_locations[unit.id].location != unit.location:
-                self.enemy_locations[unit.id] = unit
-                self.new_enemy_updates[unit.location.map_location()] = unit
+        vecunit = gc.sense_nearby_units_by_team(unit.location.map_location(), unit.vision_range, team)
+        for enemy in vecunit:
+            if enemy.id not in self.enemy_locations:
+                self.enemy_locations[enemy.id] = enemy
+                self.new_enemy_updates[self.get_coordinates(enemy.location.map_location())] = enemy
+            elif self.enemy_locations[enemy.id].location != enemy.location:
+                self.enemy_locations[enemy.id] = enemy
+                self.new_enemy_updates[self.get_coordinates(enemy.location.map_location())] = enemy
         return vecunit
 
     def clear_new_updates(self):
         self.new_enemy_updates = {}
-
 
     def find_closest_target(self, unit):
         best = None
@@ -59,11 +57,10 @@ class Radar:
         for enemy in self.enemy_locations:
             them = self.enemy_locations[enemy].location.maplocation()
             distance = me.distance_squared_to(them)
-            if best == None or distance < best:
+            if best is None or distance < best:
                 best = distance
                 target = them
         return target
-
 
     def find_closest_attackable_target(self, unit):
         best = None

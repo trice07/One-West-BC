@@ -8,6 +8,8 @@ def get_enemy_center(enemy_map, planet):
     There is no guarantee that the point will be on the map and this must
     be checked. If there are no units on the planet, the center is at (0, 0)
     """
+    if len(enemy_map)==0:
+        return None
     center_x=0
     center_y=0
     count=0
