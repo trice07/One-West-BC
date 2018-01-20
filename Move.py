@@ -33,17 +33,20 @@ def Bug(gc, unit, destination, defense=False):
         else:
             startBugging(gc, unit, location, direction, destination)
 
-def find_closest_target(unit, nearby, my_team):
-        best=None
-        target=None
-        me=unit.location.map_location()
-        for enemy in nearby:
-            if enemy.team!=my_team:
-                them=enemy.location.map_location()
-                distance=me.distance_squared_to(them)
-                if best==None or distance<best:
-                    best=distance
-                    target=them
+def find_closest_target(unit, enemy_map, planet):
+    """
+    Finds the closest enemy to a unit and returns their map location. Takes an
+    enemy_map (list) and a planet as inputs.
+    """
+    best=None
+    target=None 
+    me=unit.location.map_location()
+    for enemy in enemy_map:
+        them=bc.MapLocation(planet, enemy[0], enemy[1])
+        distance=me.distance_squared_to(them)
+        if best==None or distance<best:
+            best=distance
+            target=them
         return target
 
 def isDangerousLocation(gc, unit, location):
@@ -73,19 +76,6 @@ def random_movement(gc, unit, direction):
     """
     if gc.is_move_ready(unit.id) and gc.can_move(unit.id, direction):
         gc.move_robot(unit.id, direction)
-
-def retreat(gc, unit):
-    """
-    Run away
-    :param gc: game controller
-    :param unit: unit object
-    :return: None
-    """
-    currentLocation = unit.location.map_location()
-    enemy = bc.Team.red if gc.team() == bc.Team.blue else bc.Team.blue
-    enemies = gc.sense_nearby_units_by_team(currentLocation, 50, enemy)
-    central = findEnemyCenter(gc, enemies)
-    Bug(gc, unit, central, True)
 
 def startBugging(gc, unit, start, direction, destination, defense=False):
     """

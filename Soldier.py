@@ -27,7 +27,7 @@ def manage_soldiers(gc, unit, my_team, enemy_center):
         if isinstance(weakest_unit, bc.Unit): #If there is a weakest unit on the map
             if gc.can_heal(unit.id, weakest_unit.id) and gc.is_heal_ready(unit.id): #Try to heal it and if it cant, move towards it and try to heal until it is no longer the weakest unit on the map
                 gc.heal(unit.id, weakest_unit.id)
-            Move.Bug(gc, unit, weakest_unit.location.map_location())
+            Move.Bug(gc, unit, weakest_unit.map_location())
         else: #If there are no units that can be healed, the healer moves randomly
             if gc.is_move_ready(unit.id) and gc.can_move(unit.id, direction):
                 gc.move_robot(unit.id, direction)
