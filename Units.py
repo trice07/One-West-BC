@@ -8,7 +8,6 @@ def shoot_at_best_target(gc, unit):
     :return: bool: true if shot, false if not
     """
     if not gc.is_attack_ready(unit.id):
-        print("HEREEEEEEEEEEEEEEE")
         return None
     closest_target = get_best_target(gc, unit)
     if isinstance(closest_target, bc.Unit):
@@ -40,13 +39,19 @@ def get_best_target_earth(gc, unit):
     """
     for enemy in Globals.radar.being_shot_at_earth:
         if gc.can_attack(unit.id, enemy.id):
-            if enemy.health < unit.damage():
+            if enemy.health <= unit.damage():
                 Globals.radar.being_shot_at_earth.remove(enemy)
-                del Globals.radar.earth_enemy_locations[enemy.id]
+                Globals.radar.delete_enemy_from_radar(enemy)
+                print("Enemy Deleted")
             return enemy
     target_list = Globals.radar.update_radar(gc, unit)
     for target in target_list:
         if gc.can_attack(unit.id, target.id):
+            if target.health <= unit.damage():
+                Globals.radar.delete_enemy_from_radar(target)
+                print("Enemy Deleted")
+            else:
+                Globals.radar.being_shot_at_earth.append(target)
             return target
     return target_list
 
@@ -60,7 +65,7 @@ def get_best_target_mars(gc, unit):
     """
     for enemy in Globals.radar.being_shot_at_mars:
         if gc.can_attack(unit.id, enemy.id):
-            if enemy.health < unit.damage():
+            if enemy.health <= unit.damage():
                 Globals.radar.being_shot_at_mars.remove(enemy)
                 del Globals.radar.mars_enemy_locations[enemy.id]
             return enemy

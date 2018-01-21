@@ -43,7 +43,12 @@ def turn(gc, unit):
             moved = Navigation.retreatFromKnownEnemy(gc, unit, enemy)
             if moved:
                 return
-        destination = Globals.earth_enemy_center
+        destination = Globals.radar.get_enemy_center(unit.location.map_location().planet)
+        if unit.location.map_location() == Globals.earth_enemy_center and len(nearby_enemies) == 0:
+            for e in Globals.radar.earth_enemy_locations:
+                destination = Globals.radar.earth_enemy_locations[e].location.map_location()
+                break
+            print(len(Globals.radar.earth_enemy_locations))
         Navigation.Bug(gc, unit, destination)
     return
 

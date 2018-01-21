@@ -14,12 +14,16 @@ class Radar:
         self.our_earth_locations = {}
         self.earth_enemy_locations = {}
         self.being_shot_at_earth = []
+        self.enemy_earth_x_sum = 0
+        self.enemy_earth_y_sum = 0
 
         self.mars_map = {}
         self.mars_karbonite_locations = []
         self.our_mars_locations = {}
         self.mars_enemy_locations = {}
         self.being_shot_at_mars = []
+        self.enemy_mars_x_sum = 0
+        self.enemy_mars_y_sum = 0
 
         self.our_num_earth_workers = 0
         self.our_num_earth_knights = 0
@@ -67,7 +71,7 @@ class Radar:
                 self.earth_enemy_locations[unit.id] = unit
             else:
                 self.our_earth_locations[unit.id] = unit
-            self.update_unit_counts_earth(unit)
+            self.update_unit_counts_earth(unit, "+")
 
         # Initialize Mars Map
         for i in range(mars.width):
@@ -77,67 +81,145 @@ class Radar:
                 coords = Radar.get_coordinates(ml)
                 self.mars_map[coords] = to_add
 
-    def update_unit_counts_earth(self, unit):
+    def update_unit_counts_earth(self, unit, command):
         t = unit.unit_type
-        if unit.team == Globals.them:
-            if t == bc.UnitType.Ranger:
-                self.their_num_earth_rangers += 1
-            elif t == bc.UnitType.Factory:
-                self.their_num_earth_factories += 1
-            elif t == bc.UnitType.Rocket:
-                self.their_num_earth_rockets += 1
-            elif t == bc.UnitType.Mage:
-                self.their_num_earth_mages += 1
-            elif t == bc.UnitType.Worker:
-                self.their_num_earth_workers += 1
-            elif t == bc.UnitType.Knight:
-                self.their_num_earth_knights += 1
-            elif t == bc.UnitType.Healer:
-                self.their_num_earth_healers += 1
-        else:
-            if t == bc.UnitType.Ranger:
-                self.our_num_earth_rangers += 1
-            elif t == bc.UnitType.Factory:
-                self.our_num_earth_factories += 1
-            elif t == bc.UnitType.Rocket:
-                self.our_num_earth_rockets += 1
-            elif t == bc.UnitType.Mage:
-                self.our_num_earth_mages += 1
-            elif t == bc.UnitType.Worker:
-                self.our_num_earth_workers += 1
-            elif t == bc.UnitType.Knight:
-                self.our_num_earth_knights += 1
-            elif t == bc.UnitType.Healer:
-                self.our_num_earth_healers += 1
+        l = unit.location.map_location()
+        x = l.x
+        y = l.y
+        if command == "+":
+            if unit.team == Globals.them:
+                self.enemy_earth_x_sum += x
+                self.enemy_earth_y_sum += y
+                if t == bc.UnitType.Ranger:
+                    self.their_num_earth_rangers += 1
+                elif t == bc.UnitType.Factory:
+                    self.their_num_earth_factories += 1
+                elif t == bc.UnitType.Rocket:
+                    self.their_num_earth_rockets += 1
+                elif t == bc.UnitType.Mage:
+                    self.their_num_earth_mages += 1
+                elif t == bc.UnitType.Worker:
+                    self.their_num_earth_workers += 1
+                elif t == bc.UnitType.Knight:
+                    self.their_num_earth_knights += 1
+                elif t == bc.UnitType.Healer:
+                    self.their_num_earth_healers += 1
+            else:
+                if t == bc.UnitType.Ranger:
+                    self.our_num_earth_rangers += 1
+                elif t == bc.UnitType.Factory:
+                    self.our_num_earth_factories += 1
+                elif t == bc.UnitType.Rocket:
+                    self.our_num_earth_rockets += 1
+                elif t == bc.UnitType.Mage:
+                    self.our_num_earth_mages += 1
+                elif t == bc.UnitType.Worker:
+                    self.our_num_earth_workers += 1
+                elif t == bc.UnitType.Knight:
+                    self.our_num_earth_knights += 1
+                elif t == bc.UnitType.Healer:
+                    self.our_num_earth_healers += 1
+        elif command == "-":
+            if unit.team == Globals.them:
+                self.enemy_earth_x_sum -= x
+                self.enemy_earth_y_sum -= y
+                if t == bc.UnitType.Ranger:
+                    self.their_num_earth_rangers -= 1
+                elif t == bc.UnitType.Factory:
+                    self.their_num_earth_factories -= 1
+                elif t == bc.UnitType.Rocket:
+                    self.their_num_earth_rockets -= 1
+                elif t == bc.UnitType.Mage:
+                    self.their_num_earth_mages -= 1
+                elif t == bc.UnitType.Worker:
+                    self.their_num_earth_workers -= 1
+                elif t == bc.UnitType.Knight:
+                    self.their_num_earth_knights -= 1
+                elif t == bc.UnitType.Healer:
+                    self.their_num_earth_healers -= 1
+            else:
+                if t == bc.UnitType.Ranger:
+                    self.our_num_earth_rangers -= 1
+                elif t == bc.UnitType.Factory:
+                    self.our_num_earth_factories -= 1
+                elif t == bc.UnitType.Rocket:
+                    self.our_num_earth_rockets -= 1
+                elif t == bc.UnitType.Mage:
+                    self.our_num_earth_mages -= 1
+                elif t == bc.UnitType.Worker:
+                    self.our_num_earth_workers -= 1
+                elif t == bc.UnitType.Knight:
+                    self.our_num_earth_knights -= 1
+                elif t == bc.UnitType.Healer:
+                    self.our_num_earth_healers -= 1
 
-    def update_unit_counts_mars(self, unit):
+    def update_unit_counts_mars(self, unit, command):
         t = unit.unit_type
-        if unit.team == Globals.them:
-            if t == bc.UnitType.Ranger:
-                self.their_num_mars_rangers += 1
-            elif t == bc.UnitType.Rocket:
-                self.their_num_mars_rockets += 1
-            elif t == bc.UnitType.Mage:
-                self.their_num_mars_mages += 1
-            elif t == bc.UnitType.Worker:
-                self.their_num_mars_workers += 1
-            elif t == bc.UnitType.Knight:
-                self.their_num_mars_knights += 1
-            elif t == bc.UnitType.Healer:
-                self.their_num_mars_healers += 1
-        else:
-            if t == bc.UnitType.Ranger:
-                self.our_num_mars_rangers += 1
-            elif t == bc.UnitType.Rocket:
-                self.our_num_mars_rockets += 1
-            elif t == bc.UnitType.Mage:
-                self.our_num_mars_mages += 1
-            elif t == bc.UnitType.Worker:
-                self.our_num_mars_workers += 1
-            elif t == bc.UnitType.Knight:
-                self.our_num_mars_knights += 1
-            elif t == bc.UnitType.Healer:
-                self.our_num_mars_healers += 1
+        l = unit.location.map_location()
+        x = l.x
+        y = l.y
+        if command == "+":
+            if unit.team == Globals.them:
+                self.enemy_mars_x_sum += x
+                self.enemy_mars_y_sum += y
+                if t == bc.UnitType.Ranger:
+                    self.their_num_mars_rangers += 1
+                elif t == bc.UnitType.Rocket:
+                    self.their_num_mars_rockets += 1
+                elif t == bc.UnitType.Mage:
+                    self.their_num_mars_mages += 1
+                elif t == bc.UnitType.Worker:
+                    self.their_num_mars_workers += 1
+                elif t == bc.UnitType.Knight:
+                    self.their_num_mars_knights += 1
+                elif t == bc.UnitType.Healer:
+                    self.their_num_mars_healers += 1
+            else:
+                if t == bc.UnitType.Ranger:
+                    self.our_num_mars_rangers += 1
+                elif t == bc.UnitType.Rocket:
+                    self.our_num_mars_rockets += 1
+                elif t == bc.UnitType.Mage:
+                    self.our_num_mars_mages += 1
+                elif t == bc.UnitType.Worker:
+                    self.our_num_mars_workers += 1
+                elif t == bc.UnitType.Knight:
+                    self.our_num_mars_knights += 1
+                elif t == bc.UnitType.Healer:
+                    self.our_num_mars_healers += 1
+        elif command == "-":
+            if unit.team == Globals.them:
+                self.enemy_mars_x_sum -= x
+                self.enemy_mars_y_sum -= y
+                if t == bc.UnitType.Ranger:
+                    self.their_num_earth_rangers -= 1
+                elif t == bc.UnitType.Factory:
+                    self.their_num_earth_factories -= 1
+                elif t == bc.UnitType.Rocket:
+                    self.their_num_earth_rockets -= 1
+                elif t == bc.UnitType.Mage:
+                    self.their_num_earth_mages -= 1
+                elif t == bc.UnitType.Worker:
+                    self.their_num_earth_workers -= 1
+                elif t == bc.UnitType.Knight:
+                    self.their_num_earth_knights -= 1
+                elif t == bc.UnitType.Healer:
+                    self.their_num_earth_healers -= 1
+            else:
+                if t == bc.UnitType.Ranger:
+                    self.our_num_earth_rangers -= 1
+                elif t == bc.UnitType.Factory:
+                    self.our_num_earth_factories -= 1
+                elif t == bc.UnitType.Rocket:
+                    self.our_num_earth_rockets -= 1
+                elif t == bc.UnitType.Mage:
+                    self.our_num_earth_mages -= 1
+                elif t == bc.UnitType.Worker:
+                    self.our_num_earth_workers -= 1
+                elif t == bc.UnitType.Knight:
+                    self.our_num_earth_knights -= 1
+                elif t == bc.UnitType.Healer:
+                    self.our_num_earth_healers -= 1
 
     def update_radar(self, gc, unit):
         vecunit = gc.sense_nearby_units_by_team(unit.location.map_location(), unit.vision_range, Globals.them)
@@ -161,6 +243,11 @@ class Radar:
             cache = self.mars_enemy_locations
         else:
             return
+        if enemy.id not in cache:
+            if enemy.location.is_on_planet(bc.Planet.Earth):
+                self.update_unit_counts_earth(enemy, "+")
+            else:
+                self.update_unit_counts_mars(enemy, "+")
         cache[enemy.id] = enemy
 
     def clear_being_shot_at_cache(self, planet):
@@ -170,47 +257,6 @@ class Radar:
             self.being_shot_at_mars = []
         return
 
-    # def find_closest_target(self, unit):
-    #     best = None
-    #     target = None
-    #     me = unit.location.map_location()
-    #     for enemy in self.enemy_locations:
-    #         them = self.enemy_locations[enemy].location.maplocation()
-    #         distance = me.distance_squared_to(them)
-    #         if best is None or distance < best:
-    #             best = distance
-    #             target = them
-    #     return target
-    #
-    # def find_closest_attackable_target(self, unit):
-    #     best = None
-    #     target = None
-    #     me = unit.location.map_location()
-    #     for enemy in self.enemy_locations:
-    #         them = self.enemy_locations[enemy].location.maplocation()
-    #         distance = me.distance_squared_to(them)
-    #         range = unit.attack_range()
-    #         if distance < range:
-    #             if best == None or distance < best:
-    #                 best = distance
-    #                 target = them
-    #     return target
-
-    # def update_closest_target(self, unit, prev):
-    #     me = unit.location.map_location()
-    #     best = me.distance_squared_to(prev)
-    #     target = prev
-    #     ranger_range = 0
-    #     if unit.type == bc.UnitType.Ranger:
-    #         ranger_range = unit.ranger_cannot_attack_range()
-    #     for enemy in self.new_enemy_updates:
-    #         distance = me.distance_squared_to(enemy)
-    #         range = unit.attack_range()
-    #         if ranger_range <= distance < range:
-    #             if best is None or distance < best:
-    #                 best = distance
-    #                 target = enemy
-    #     return target
 
     @staticmethod
     def get_init_type(ml, planet):
@@ -293,17 +339,24 @@ class Radar:
         """
         if planet == bc.Planet.Earth:
             cache = self.earth_enemy_locations
+            center_x = self.enemy_earth_x_sum
+            center_y = self.enemy_earth_y_sum
+            count = len(self.earth_enemy_locations)
         elif planet == bc.Planet.Mars:
             cache = self.mars_enemy_locations
+            center_x = self.enemy_mars_x_sum
+            center_y = self.enemy_mars_y_sum
+            count = len(self.mars_enemy_locations)
         else:
             return None
         if len(cache) == 0:
             return None
-        center_x = 0
-        center_y = 0
-        count = 0
-        for i in cache:  # Loops through all x and y values in the enemy_map and sums them up
-            count += 1
-            center_x += cache[i].location.map_location().y
-            center_y += cache[i].location.map_location().y
         return bc.MapLocation(planet, center_x//count, center_y//count)  # Returns a MapLocation object that is at the center of the e forces
+
+    def delete_enemy_from_radar(self, enemy):
+        del Globals.radar.earth_enemy_locations[enemy.id]
+        if enemy.location.is_on_planet(bc.Planet.Earth):
+            self.update_unit_counts_earth(enemy, "-")
+        elif enemy.location.is_on_planet(bc.Planet.Mars):
+            self.update_unit_counts_mars(enemy, "-")
+
