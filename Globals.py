@@ -1,8 +1,7 @@
-import battlecode as bc
-from Radar import Radar
-
 radar = None
 earth_enemy_center = None
-our_players = {}
+us = None
+them = None
+explore_map = False
 
-
+rocket_landings = []

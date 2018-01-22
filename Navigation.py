@@ -1,6 +1,9 @@
 import battlecode as bc
 import sys
 
+import Globals
+
+
 def Bug(gc, unit, destination, defense=False):
     """
     Movement algorithm that tries to go in the proper direction and begins circumnavigating if obstacle is present
@@ -190,6 +193,85 @@ def reflectPoint(location):
     new_y = int(2*d - y)
     newPt = bc.MapLocation(location.planet, new_x, new_y)
     return newPt
+
+
+def BFS(earth_map, start_location, end_location):
+    s = start_location
+    frontier = [s]
+    parents = {(s.x, s.y): None}
+
+    while frontier:
+        #print(explored)
+        #debug(frontier)
+        frontier = exploreFrontier(frontier, earth_map, parents)
+        if (end_location.x, end_location.y) in parents:
+            return parents
+    return parents
+
+
+def exploreFrontier(frontier, earth_map, parent):
+    newFrontier = []
+    d = bc.Direction.North
+    for f in frontier:
+        for i in range(8):
+            d = d.rotate_right()
+            newLocation = f.add(d)
+            if earth_map.on_map(newLocation) and (newLocation.x, newLocation.y) not in parent:
+                parent[(newLocation.x, newLocation.y)] = f
+                newFrontier.append(newLocation)
+    return newFrontier
+
+
+
+def debug(frontier):
+    frontier = [(frontier[i].x, frontier[i].y) for i in range(len(frontier))]
+    print(frontier)
+
+def allPairs(earth_map):
+    for i in range(earth_map.width):
+        for j in range(earth_map.height):
+            location = bc.MapLocation(bc.Planet.Earth, i, j)
+            x = BFS(earth_map, location)
+            Globals.paths[(i, j)] = x
+
+
+def optimalNav(gc, unit, destination):
+    ##nOT SO OPTIMAL
+    path = Globals.paths[(unit.location.map_location().x, unit.location.map_location().y)]
+    endpt = (destination.x, destination.y)
+    parent = path[endpt]
+    while parent != unit.location.map_location():
+        newSquare = parent
+        parent = path[newSquare]
+    direction = unit.location.map_location().direction_to(newSquare)
+    if gc.can_move(unit.id, direction):
+        gc.move_robot(unit.id, direction)
+    else:
+        Bug(gc, unit, destination)
+
+
+# def straightToEnemy(gc, factory):
+#     start = factory.location.map_location()
+
+
+def path_with_bfs(gc, unit, start, destination):
+    earthmap = gc.starting_map(bc.Planet.Earth)
+    d = bc.Direction.North
+    while not earthmap.is_passable_terrain_at(destination):
+        d = d.rotate_right()
+        destination = destination.add(d)
+    path = BFS(earthmap, start, destination)
+    endpt = (destination.x, destination.y)
+    parent = (path[endpt].x, path[endpt].y)
+    while parent != (start.x, start.y):
+        endpt = parent
+        parent = (path[endpt].x, path[endpt].y)
+    goTo = bc.MapLocation(bc.Planet.Earth, endpt[0], endpt[1])
+    direction = unit.location.map_location().direction_to(goTo)
+    if gc.can_move(unit.id, direction):
+        gc.move_robot(unit.id, direction)
+    else:
+        Bug(gc, unit, destination)
 
 
 
