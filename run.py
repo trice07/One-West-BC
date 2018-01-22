@@ -42,7 +42,7 @@ while True:
     try:
         # Unit Controls #
         for unit in gc.my_units():
-            Globals.radar.update_location(unit)
+            Globals.radar.update_location(gc, unit)
             if unit.location.is_on_map():
                 if unit.unit_type == bc.UnitType.Worker:
                     Worker.manage_worker(gc, unit)

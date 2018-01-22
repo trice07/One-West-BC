@@ -1,6 +1,6 @@
 import battlecode as bc
 import sys
-
+import math
 import Globals
 
 
@@ -222,10 +222,19 @@ def exploreFrontier(frontier, earth_map, parent):
     return newFrontier
 
 
+def reversePath(path, destination):
+    end = (destination.x, destination.y)
+    correctDirection = {}
+    while end is not None:
+        correctDirection[path[end]] = end
+        end = (path[end].x, path[end].y)
+    return correctDirection
+
 
 def debug(frontier):
     frontier = [(frontier[i].x, frontier[i].y) for i in range(len(frontier))]
     print(frontier)
+
 
 def allPairs(earth_map):
     for i in range(earth_map.width):
@@ -250,11 +259,8 @@ def optimalNav(gc, unit, destination):
         Bug(gc, unit, destination)
 
 
-# def straightToEnemy(gc, factory):
-#     start = factory.location.map_location()
-
-
 def path_with_bfs(gc, unit, start, destination):
+    #also too slow
     earthmap = gc.starting_map(bc.Planet.Earth)
     d = bc.Direction.North
     while not earthmap.is_passable_terrain_at(destination):
@@ -274,5 +280,41 @@ def path_with_bfs(gc, unit, start, destination):
         Bug(gc, unit, destination)
 
 
+def straightToEnemy(gc, unit):
+    start = unit.location.map_location()
+    Map = gc.starting_map(start.planet)
+    initialUnits = Map.initial_units
+    initEnemyLocations = []
+    for unit in initialUnits:
+        if unit.team != gc.team():
+            initEnemyLocations.append(unit.location.map_location())
+    paths = []
+    for loc in initEnemyLocations:
+        shortestPath = BFS(Map, start, loc)
+        paths.append(reversePath(shortestPath, loc))
+    Globals.paths_to_initial_enemylocs[unit.id] = paths
+
+
+def disperse(gc, unit):
+    start = unit.location.map_location()
+    quads = findQuadrants(gc.starting_map(start.planet))
+    paths = []
+    for loc in quads:
+        shortestPath = BFS(gc.starting_map(start.planet), start, loc)
+        paths.append(reversePath(shortestPath, loc))
+    if start.planet == bc.Planet.Earth:
+        Globals.paths_to_disperse_earth[unit.id] = paths
+    else:
+        Globals.paths_to_disperse_mars[unit.id] = paths
+
+
+def findQuadrants(planetmap):
+    width = planetmap.width
+    height = planetmap.height
+    xquart = math.floor(width / 4)
+    yquart = math.floor(height / 4)
+    quadrantCenters = [(xquart, yquart), (width - xquart, yquart), (xquart, height - yquart), (width - xquart, height - yquart)]
+    quadrantCenters = [bc.MapLocation(planetmap.planet, quadrantCenters[i][0], quadrantCenters[i][1]) for i in range(4)]
+    return quadrantCenters
 
 
