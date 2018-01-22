@@ -53,6 +53,9 @@ class Radar:
         self.their_num_mars_healers = 0
         self.their_num_mars_rockets = 0
 
+        self.current_units = {}
+        self.previous_units = {}
+
         # Initialize Earth Map
         for i in range(earth.width):
             for j in range(earth.height):
@@ -71,6 +74,7 @@ class Radar:
                 self.earth_enemy_locations[unit.id] = unit
             else:
                 self.our_earth_locations[unit.id] = unit
+                self.previous_units[unit.id] = unit
             self.update_unit_counts_earth(unit, "+")
 
         # Initialize Mars Map
@@ -230,21 +234,46 @@ class Radar:
     def update_location(self, unit):
         if unit.location.is_on_planet(bc.Planet.Earth):
             cache = self.our_earth_locations
+            planet = bc.Planet.Earth
         elif unit.location.is_on_planet(bc.Planet.Mars):
             cache = self.our_mars_locations
+            planet = bc.Planet.Mars
         else:
             return
+        if unit.id not in cache:
+            if planet == bc.Planet.Earth:
+                self.update_unit_counts_earth(unit, "+")
+            else:
+                self.update_unit_counts_mars(unit, "+")
         cache[unit.id] = unit
+        self.current_units[unit.id] = unit
+        if unit.id in self.previous_units:
+            del self.previous_units[unit.id]
+
+    def remove_dead_enemies(self):
+        for unit_id in self.previous_units:
+            unit = self.previous_units[unit_id]
+            if unit.location.is_on_planet(bc.Planet.Earth):
+                self.update_unit_counts_earth(unit, "-")
+                del self.our_earth_locations[unit_id]
+            else:
+                self.update_unit_counts_mars(unit, "-")
+                del self.our_earth_locations[unit_id]
+                del self.our_mars_locations[unit_id]
+        self.previous_units = self.current_units
+        self.current_units = {}
 
     def update_enemy_cache(self, enemy):
         if enemy.location.is_on_planet(bc.Planet.Earth):
             cache = self.earth_enemy_locations
+            planet = bc.Planet.Earth
         elif enemy.location.is_on_planet(bc.Planet.Mars):
             cache = self.mars_enemy_locations
+            planet = bc.Planet.Mars
         else:
             return
         if enemy.id not in cache:
-            if enemy.location.is_on_planet(bc.Planet.Earth):
+            if planet == bc.Planet.Earth:
                 self.update_unit_counts_earth(enemy, "+")
             else:
                 self.update_unit_counts_mars(enemy, "+")
@@ -284,7 +313,6 @@ class Radar:
             return self.earth_map[location]["karb"]
         else:
             print("Planet type not specified, make sure planet is a Planet object.")
-            raise TypeError
 
     def get_unit_at_location(self, planet, location):
         if isinstance(location, bc.Location):
@@ -299,7 +327,6 @@ class Radar:
             return self.earth_map[location]["unit"]
         else:
             print("Planet type not specified, make sure planet is a Planet object.")
-            raise TypeError
 
     def is_terrain_passable(self, planet, location):
         if isinstance(location, bc.Location):

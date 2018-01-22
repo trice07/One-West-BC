@@ -38,8 +38,8 @@ Globals.earth_enemy_center = Globals.radar.get_enemy_center(bc.Planet.Earth)  # 
 while True:
     # Start of Turn Updates #
     
-    print("Round: ", gc.round())
-    print("Karbonite: ", gc.karbonite())
+    # print("Round: ", gc.round())
+    # print("Karbonite: ", gc.karbonite())
         
     try:
         # Unit Controls #
@@ -62,7 +62,9 @@ while True:
                     Ranger.turn(gc, unit)
                 elif unit.unit_type == bc.UnitType.Factory:
                     Factory.factory_manager(gc, unit)
-    
+        print(Globals.radar.our_num_earth_rangers)
+        Globals.radar.remove_dead_enemies()
+
     # Allows us to locate errors in the code
     except Exception as e:
         print('Error:', e)

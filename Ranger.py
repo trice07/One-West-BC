@@ -48,7 +48,6 @@ def turn(gc, unit):
             for e in Globals.radar.earth_enemy_locations:
                 destination = Globals.radar.earth_enemy_locations[e].location.map_location()
                 break
-            print(len(Globals.radar.earth_enemy_locations))
         Navigation.Bug(gc, unit, destination)
     return
 
