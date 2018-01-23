@@ -42,6 +42,8 @@ while True:
     try:
         # Globals.radar.update_mars_karb(gc)
         # Unit Controls #
+        if gc.round() % 25 == 0:
+            Navigation.BFS(gc.starting_map(bc.Planet.Earth), Globals.radar.get_enemy_center(bc.Planet.Earth))
         for unit in gc.my_units():
             if Units.try_go_to_rocket(gc, unit):
                 continue
