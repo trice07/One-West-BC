@@ -35,7 +35,7 @@ def manage_worker(gc, unit):
                     gc.blueprint(unit.id, bc.UnitType.Rocket, d)
                     #Globals.radar.update_unit_counts_earth()
         else:
-            if gc.karbonite() < 200:
+            if gc.karbonite() < 150:
                 d = findViableDirection(gc, unit, "harvest")
                 if d is None:
                     karb = WorkerMovement.findNearestKarb(gc, unit)

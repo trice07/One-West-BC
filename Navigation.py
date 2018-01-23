@@ -201,18 +201,24 @@ def BFS(map, start_location):
     start = start_location
     d = bc.Direction.North
     for i in range(8):
-        if map.is_passable_terrain_at(start):
-            break
+        loc = start.add(d)
+        if map.on_map(loc):
+            if map.is_passable_terrain_at(start):
+                break
         start = start.add(d)
-    if map.is_passable_terrain_at(start):
-        frontier = [start]
-        parents = {(start.x, start.y): None}
+    if map.on_map(start):
+        if map.is_passable_terrain_at(start):
+            frontier = [start]
+            parents = {(start.x, start.y): None}
 
-        while frontier:
-            #print(explored)
-            #debug(frontier)
-            frontier = exploreFrontier(frontier, map, parents)
-        Globals.pathToEnemy = parents
+            while frontier:
+                #print(explored)
+                #debug(frontier)
+                frontier = exploreFrontier(frontier, map, parents)
+            if start.planet == bc.Planet.Earth:
+                Globals.pathToEnemy = parents
+            else:
+                Globals.pathToEnemyMars = parents
     # print("done with bfs", timeit.timeit())
 
 
@@ -269,21 +275,33 @@ def optimalNav(gc, unit, destination):
 
 def path_with_bfs(gc, unit):
     #also too slow
+    selfloc = unit.location.map_location()
+    planet = selfloc.planet
+    path = Globals.pathToEnemy if planet == bc.Planet.Earth else Globals.pathToEnemyMars
+    try:
+        move = path[(selfloc.x, selfloc.y)]
 
-    move = Globals.pathToEnemy[(unit.location.map_location().x, unit.location.map_location().y)]
-    # print(move.x, move.y)
-    if move:
-        direction = unit.location.map_location().direction_to(move)
+# print(move.x, move.y)
+        if move:
+            direction = unit.location.map_location().direction_to(move)
+            if gc.can_move(unit.id, direction):
+                gc.move_robot(unit.id, direction)
+                return True
+            else:
+                if gc.can_move(unit.id, direction.rotate_right()):
+                    gc.move_robot(unit.id, direction.rotate_right())
+                    return True
+                elif gc.can_move(unit.id, direction.rotate_left()):
+                    gc.move_robot(unit.id, direction.rotate_left())
+                    return True
+    except KeyError:
+        direction = selfloc.direction_to(Globals.radar.get_enemy_center(selfloc.planet))
         if gc.can_move(unit.id, direction):
             gc.move_robot(unit.id, direction)
-            return True
-        else:
-            if gc.can_move(unit.id, direction.rotate_right()):
-                gc.move_robot(unit.id, direction.rotate_right())
-                return True
-            elif gc.can_move(unit.id, direction.rotate_left()):
-                gc.move_robot(unit.id, direction.rotate_left())
-                return True
+        elif gc.can_move(unit.id, direction.rotate_left()):
+            gc.move_robot(unit.id, direction.rotate_left())
+        elif gc.can_move(unit.id, direction.rotate_right()):
+            gc.move_robot(unit.id, direction.rotate_right())
 
 
 # def straightToEnemy(gc, unit):
