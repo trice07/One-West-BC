@@ -27,7 +27,7 @@ def factory_manager(gc, unit):
             if gc.can_produce_robot(unit.id, bc.UnitType.Healer):
                 gc.produce_robot(unit.id, bc.UnitType.Healer)
                 units_produced += 1
-        if units_produced % 2 == 0 and units_produced != 0:  # Every two units produce a ranger
+        if units_produced % 3 == 0 and units_produced != 0:  # Every two units produce a ranger
             if gc.can_produce_robot(unit.id, bc.UnitType.Ranger):
                 gc.produce_robot(unit.id, bc.UnitType.Ranger)
                 units_produced += 1

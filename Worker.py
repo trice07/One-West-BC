@@ -58,18 +58,18 @@ def manage_worker(gc, unit):
                     #update globals
 
 
-    # #mars worker logic
-    # if unit.location.map_location().planet == bc.Planet.Mars:
-    #     if Globals.radar.their_num_mars_rockets > 0 or gc.round() > 700:
-    #         d = findViableDirection(gc, unit, "replicate")
-    #         if d is None:
-    #             if unit.movement_heat() < 10:
-    #                 WorkerMovement.findNearestKarb(gc, unit)
-    #         else:
-    #             gc.replicate(unit.id, d)
-    #     else:
-    #         if unit.movement_heat() < 10:
-    #             WorkerMovement.findNearestKarb(gc, unit)
+    #mars worker logic
+    elif unit.location.map_location().planet == bc.Planet.Mars:
+        if Globals.radar.their_num_mars_rockets > 0 or gc.round() > 700:
+            d = findViableDirection(gc, unit, "replicate")
+            if d is None:
+                if unit.movement_heat() < 10:
+                    WorkerMovement.findNearestKarb(gc, unit)
+            else:
+                gc.replicate(unit.id, d)
+        else:
+            if unit.movement_heat() < 10:
+                WorkerMovement.findNearestKarb(gc, unit)
 
 
 def findViableDirection(gc, unit, action):

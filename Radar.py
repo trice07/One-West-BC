@@ -1,7 +1,7 @@
 import battlecode as bc
 
 import Globals
-import Navigation
+
 
 class Radar:
     def __init__(self, earth, mars):
@@ -57,6 +57,8 @@ class Radar:
         self.current_units = {}
         self.previous_units = {}
 
+        self.units_going_to_rocket = {}
+
         # Initialize Earth Map
         for i in range(earth.width):
             for j in range(earth.height):
@@ -83,6 +85,8 @@ class Radar:
             for j in range(mars.height):
                 ml = bc.MapLocation(mars.planet, i, j)
                 to_add = Radar.get_init_type(ml, mars)
+                if to_add["karb"] != 0:
+                    self.mars_karbonite_locations.append(ml)
                 coords = Radar.get_coordinates(ml)
                 self.mars_map[coords] = to_add
 
@@ -246,12 +250,6 @@ class Radar:
                 self.update_unit_counts_earth(unit, "+")
             else:
                 self.update_unit_counts_mars(unit, "+")
-            # if unit.unit_type == bc.UnitType.Factory:
-            #     Navigation.disperse(gc, unit)
-            #     Navigation.straightToEnemy(gc, unit)
-            # if unit.unit_type == bc.UnitType.Rocket and unit.location.is_on_planet(bc.Planet.Mars):
-            #     Navigation.disperse(gc, unit)
-            #     print(Globals.paths_to_disperse_mars)
         cache[unit.id] = unit
         self.current_units[unit.id] = unit
         if unit.id in self.previous_units:
@@ -392,4 +390,9 @@ class Radar:
             self.update_unit_counts_earth(enemy, "-")
         elif enemy.location.is_on_planet(bc.Planet.Mars):
             self.update_unit_counts_mars(enemy, "-")
+
+    # def update_mars_karb(self, gc):
+    #
+    #     return
+
 
