@@ -13,13 +13,13 @@ def manage_rockets(gc, unit):
     location = unit.location
 
     if location.map_location().planet == bc.Planet.Earth:
-        print(unit.id, "ROCKET ON MAP")
-        if unit.structure_is_built():
-            print(unit.id, "ROCKET IS BUILT")
+        # print(unit.id, "ROCKET ON MAP")
+        # if unit.structure_is_built():
+            # print(unit.id, "ROCKET IS BUILT")
         if len(unit.structure_garrison()) > 1:
             destination = find_landing(gc, unit)
             if destination is not None:
-                print(unit.id, "ROCKET CAN LAUNCH")
+                # print(unit.id, "ROCKET CAN LAUNCH")
                 gc.launch_rocket(unit.id, destination)
     else:
         d = bc.Direction.North

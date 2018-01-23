@@ -232,7 +232,7 @@ class Radar:
             self.update_enemy_cache(enemy)
         return vecunit
 
-    def update_location(self, gc, unit):
+    def update_location(self, unit):
         if unit.location.is_on_planet(bc.Planet.Earth):
             cache = self.our_earth_locations
             planet = bc.Planet.Earth
@@ -246,11 +246,12 @@ class Radar:
                 self.update_unit_counts_earth(unit, "+")
             else:
                 self.update_unit_counts_mars(unit, "+")
-            if unit.unit_type == bc.UnitType.Factory:
-                Navigation.disperse(gc, unit)
-                Navigation.straightToEnemy(gc, unit)
-            if unit.unit_type == bc.UnitType.Rocket and unit.location.is_on_planet(bc.Planet.Mars):
-                Navigation.disperse(gc, unit)
+            # if unit.unit_type == bc.UnitType.Factory:
+            #     Navigation.disperse(gc, unit)
+            #     Navigation.straightToEnemy(gc, unit)
+            # if unit.unit_type == bc.UnitType.Rocket and unit.location.is_on_planet(bc.Planet.Mars):
+            #     Navigation.disperse(gc, unit)
+            #     print(Globals.paths_to_disperse_mars)
         cache[unit.id] = unit
         self.current_units[unit.id] = unit
         if unit.id in self.previous_units:

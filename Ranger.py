@@ -1,5 +1,5 @@
 import battlecode as bc
-
+import random
 import Globals
 import Navigation
 import Units
@@ -44,13 +44,19 @@ def turn(gc, unit):
             moved = Navigation.retreatFromKnownEnemy(gc, unit, enemy)
             if moved:
                 return
-        destination = Globals.radar.get_enemy_center(unit.location.map_location().planet)
-        print(destination.x, destination.y)
-        if unit.location.map_location() == Globals.earth_enemy_center and len(nearby_enemies) == 0:
-            for e in Globals.radar.earth_enemy_locations:
-                destination = Globals.radar.earth_enemy_locations[e].location.map_location()
-                break
-        Navigation.path_with_bfs(gc, unit, unit.location.map_location(), destination)
+        # destination = Globals.radar.get_enemy_center(unit.location.map_location().planet)
+        # print(destination.x, destination.y)
+        # if unit.location.map_location() == Globals.earth_enemy_center and len(nearby_enemies) == 0:
+        #     for e in Globals.radar.earth_enemy_locations:
+        #         destination = Globals.radar.earth_enemy_locations[e].location.map_location()
+        #         break
+        moved = Navigation.path_with_bfs(gc, unit)
+        if not moved:
+            d = random.choice([0, 1, 2, 3])
+            direction = unit.location.map_location().direction_to(Globals.quads[d])
+            if gc.can_move(unit.id, direction):
+                gc.move_robot(unit.id, direction)
+
     return
 
 

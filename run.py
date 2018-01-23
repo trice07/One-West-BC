@@ -1,7 +1,7 @@
 import battlecode as bc
 import sys
 import traceback
-
+import Navigation
 import Factory
 import Globals
 import Healer
@@ -10,6 +10,7 @@ import Research
 import Rocket
 import Worker
 from Radar import Radar
+import Navigation
 
 # Pre-Game #
 
@@ -30,8 +31,7 @@ Research.fill_research_queue(gc)  # Fills the research queue
 # mars_width, mars_height=Map.get_map_size(mars_map)
 
 Globals.radar = Radar(gc.starting_map(bc.Planet.Earth), gc.starting_map(bc.Planet.Mars))
-Globals.earth_enemy_center = Globals.radar.get_enemy_center(bc.Planet.Earth)  # The center of starting enemy units on Earth
-
+Globals.quads = Navigation.findQuadrants(gc.starting_map(bc.Planet.Earth))
 
 while True:
     # Start of Turn Updates #
@@ -41,8 +41,14 @@ while True:
         
     try:
         # Unit Controls #
+        if gc.round() % 25 == 0:
+        #print("starting BFS")
+            Navigation.BFS(gc.starting_map(bc.Planet.Earth), Globals.radar.get_enemy_center(bc.Planet.Earth))
+        #print("ending BFS")
         for unit in gc.my_units():
-            Globals.radar.update_location(gc, unit)
+            # print(gc.round(), "updating")
+            Globals.radar.update_location(unit)
+            # print(gc.round(), "updated")
             if unit.location.is_on_map():
                 if unit.unit_type == bc.UnitType.Worker:
                     Worker.manage_worker(gc, unit)
@@ -61,8 +67,9 @@ while True:
                 elif unit.unit_type == bc.UnitType.Factory:
                     Factory.factory_manager(gc, unit)
         #print(Globals.radar.our_num_earth_rangers)
+        # print(gc.round(), "removing")
         Globals.radar.remove_dead_enemies()
-
+        # print(gc.round(), "removed")
     # Allows us to locate errors in the code
     except Exception as e:
         print('Error:', e)
