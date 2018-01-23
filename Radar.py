@@ -1,4 +1,5 @@
 import battlecode as bc
+
 import Globals
 
 
@@ -56,6 +57,8 @@ class Radar:
         self.current_units = {}
         self.previous_units = {}
 
+        self.units_going_to_rocket = {}
+
         # Initialize Earth Map
         for i in range(earth.width):
             for j in range(earth.height):
@@ -82,6 +85,8 @@ class Radar:
             for j in range(mars.height):
                 ml = bc.MapLocation(mars.planet, i, j)
                 to_add = Radar.get_init_type(ml, mars)
+                if to_add["karb"] != 0:
+                    self.mars_karbonite_locations.append(ml)
                 coords = Radar.get_coordinates(ml)
                 self.mars_map[coords] = to_add
 
@@ -258,7 +263,6 @@ class Radar:
                 del self.our_earth_locations[unit_id]
             else:
                 self.update_unit_counts_mars(unit, "-")
-                del self.our_earth_locations[unit_id]
                 del self.our_mars_locations[unit_id]
         self.previous_units = self.current_units
         self.current_units = {}
@@ -386,4 +390,9 @@ class Radar:
             self.update_unit_counts_earth(enemy, "-")
         elif enemy.location.is_on_planet(bc.Planet.Mars):
             self.update_unit_counts_mars(enemy, "-")
+
+    # def update_mars_karb(self, gc):
+    #
+    #     return
+
 

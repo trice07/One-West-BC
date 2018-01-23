@@ -1,17 +1,15 @@
 import battlecode as bc
+import sys
+import traceback
+import Units
 import Factory
 import Globals
 import Healer
-import Knight
-import Mage
-import Map
-import sys
-import traceback
-from Radar import Radar
 import Ranger
 import Research
 import Rocket
 import Worker
+from Radar import Radar
 
 # Pre-Game #
 
@@ -42,8 +40,11 @@ while True:
     # print("Karbonite: ", gc.karbonite())
         
     try:
+        # Globals.radar.update_mars_karb(gc)
         # Unit Controls #
         for unit in gc.my_units():
+            if Units.try_go_to_rocket(gc, unit):
+                continue
             Globals.radar.update_location(unit)
             if unit.location.is_on_map():
                 if unit.unit_type == bc.UnitType.Worker:
@@ -62,7 +63,6 @@ while True:
                     Ranger.turn(gc, unit)
                 elif unit.unit_type == bc.UnitType.Factory:
                     Factory.factory_manager(gc, unit)
-        print(Globals.radar.our_num_earth_rangers)
         Globals.radar.remove_dead_enemies()
 
     # Allows us to locate errors in the code

@@ -1,6 +1,7 @@
 import battlecode as bc
-import Move
 import random
+
+import Move
 
 directions=list(bc.Direction) #Stores all directions as a list
 random.seed(1) #Random seeding for testing. Will be removed
@@ -17,7 +18,7 @@ def manage_mages(gc, unit, enemy_center, enemy_map, enemy_team):
     direction=random.choice(directions) #Picks a direction
     while direction==bc.Direction.Center: #Ensures that the direction is not center
         direction=random.choice(directions)          
-    closest=Move.find_closest_target(unit, enemy_map, unit.location.map_location().planet) #The closest known enemy unit 
+    closest= Move.find_closest_target(unit, enemy_map, unit.location.map_location().planet) #The closest known enemy unit
     nearby=gc.sense_nearby_units_by_team(unit.location.map_location(), unit.attack_range(), enemy_team) #All units that can be attacked 
     if unit in arrived: #If the unit has already moved to the center of the enemy position, move to the nearest known enemy or move randomly if there are none
         if len(nearby)==0: #If there are no nearby units

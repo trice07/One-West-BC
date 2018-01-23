@@ -1,6 +1,7 @@
 import battlecode as bc
-import Move
 import random
+
+import Move
 
 directions=list(bc.Direction) #Stores all directions as a list
 random.seed(1) #Random seeding for testing. Will be removed

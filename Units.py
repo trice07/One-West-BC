@@ -1,4 +1,5 @@
 import battlecode as bc
+import Navigation
 import Globals
 
 
@@ -74,3 +75,17 @@ def get_best_target_mars(gc, unit):
         if gc.can_attack(unit.id, target.id):
             return target
     return target_list
+
+
+def try_go_to_rocket(gc, unit):
+    if unit.id in Globals.rockets_queue and gc.is_move_ready(unit.id) and not unit.location.is_in_garrison():
+        print("HEADING TO ROCKET")
+        rocket_location = Globals.rockets_queue[unit.id].location
+        rocket_id = Globals.rockets_queue[unit.id].id
+        if gc.can_load(rocket_id, unit.id):
+            Globals.rockets_waiting[rocket_id]["units_ready"].add(unit.id)
+            return True
+        destination = rocket_location.map_location()
+        Navigation.Bug(gc, unit, destination)
+        return True
+    return False

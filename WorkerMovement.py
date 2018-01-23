@@ -1,6 +1,8 @@
 import battlecode as bc
-import Navigation
 import sys
+
+import Globals
+import Navigation
 
 
 def findNearestKarb(gc, unit):
@@ -12,10 +14,13 @@ def findNearestKarb(gc, unit):
     """
     closestKarb = sys.maxsize
     nearestLoc = None
-    radarVision = gc.get_team_array(gc.planet())[0]
-    carbs = radarVision.earth_karboniteLocations if gc.planet() == bc.Planet.Earth else radarVision.mars_karboniteLocations
+    if gc.planet() == bc.Planet.Earth:
+        carbs = Globals.radar.earth_karbonite_locations
+    else:
+        carbs = Globals.radar.mars_karbonite_locations
     for carboLoad in carbs:
         if carboLoad.distance_squared_to(unit.location.map_location()) < closestKarb:
             closestKarb = carboLoad.distance_squared_to(unit.location.map_location())
             nearestLoc = carboLoad
-    Navigation.Bug(gc, unit, nearestLoc, True)
+    if nearestLoc is not None:
+        Navigation.Bug(gc, unit, nearestLoc)

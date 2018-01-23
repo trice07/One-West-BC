@@ -1,4 +1,5 @@
 import battlecode as bc
+
 import Navigation
 
 

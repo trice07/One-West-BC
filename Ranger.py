@@ -1,4 +1,5 @@
 import battlecode as bc
+
 import Globals
 import Navigation
 import Units
@@ -43,12 +44,17 @@ def turn(gc, unit):
             moved = Navigation.retreatFromKnownEnemy(gc, unit, enemy)
             if moved:
                 return
-        destination = Globals.radar.get_enemy_center(unit.location.map_location().planet)
+        current_planet = unit.location.map_location().planet
+        destination = Globals.radar.get_enemy_center(current_planet)
+        if destination is None:
+            map = gc.starting_map(current_planet)
+            destination = bc.MapLocation(bc.Planet.Mars, map.width//2, map.height//2)
+        print(destination.x, destination.y)
         if unit.location.map_location() == Globals.earth_enemy_center and len(nearby_enemies) == 0:
             for e in Globals.radar.earth_enemy_locations:
                 destination = Globals.radar.earth_enemy_locations[e].location.map_location()
                 break
-        Navigation.Bug(gc, unit, destination)
+        Navigation.path_with_bfs(gc, unit, unit.location.map_location(), destination)
     return
 
 
