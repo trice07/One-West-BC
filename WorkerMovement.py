@@ -22,10 +22,5 @@ def findNearestKarb(gc, unit):
         if carboLoad.distance_squared_to(unit.location.map_location()) < closestKarb:
             closestKarb = carboLoad.distance_squared_to(unit.location.map_location())
             nearestLoc = carboLoad
-<<<<<<< HEAD
     return nearestLoc
 
-=======
-    if nearestLoc is not None:
-        Navigation.Bug(gc, unit, nearestLoc)
->>>>>>> 0d14461098cffe26bc16b56886c86a20f98f7dec

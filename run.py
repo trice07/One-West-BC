@@ -10,6 +10,7 @@ import Research
 import Rocket
 import Worker
 from Radar import Radar
+import Navigation
 
 # Pre-Game #
 
