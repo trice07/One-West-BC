@@ -3,6 +3,7 @@ import random
 
 import Globals
 import WorkerMovement
+import Navigation
 
 directions=list(bc.Direction) #Stores all directions as a list
 random.seed(1) #Random seeding for testing. Will be removed
@@ -22,15 +23,14 @@ def manage_worker(gc, unit):
                     gc.build(unit.id, other.id)
                 elif other.health < other.max_health / 2 and gc.can_repair(unit.id, other.id):
                     gc.repair(unit.id, other.id)
-                elif other.unit_type == bc.UnitType.Rocket and gc.can_load(other.id, unit.id):
-                    gc.load(other.id, unit.id)
 
         if gc.round() > 100:
             if Globals.radar.our_num_mars_rangers == 0 or Globals.radar.our_num_mars_workers == 0:
                 d = findViableDirection(gc, unit, "blueprintr")
                 if d is None:
                     if unit.movement_heat() < 10:
-                        WorkerMovement.findNearestKarb(gc, unit)
+                        karb = WorkerMovement.findNearestKarb(gc, unit)
+                        Navigation.Bug(gc, unit, karb)
                 else:
                     gc.blueprint(unit.id, bc.UnitType.Rocket, d)
                     #Globals.radar.update_unit_counts_earth()
@@ -38,8 +38,12 @@ def manage_worker(gc, unit):
             if gc.karbonite() < 200:
                 d = findViableDirection(gc, unit, "harvest")
                 if d is None:
-                    if unit.movement_heat() < 10:
-                        WorkerMovement.findNearestKarb(gc, unit)
+                    karb = WorkerMovement.findNearestKarb(gc, unit)
+                    karbDir = unit.location.map_location().direction_to(karb)
+                    if gc.can_replicate(unit.id, karbDir):
+                        gc.replicate(unit.id, karbDir)
+                    elif unit.movement_heat() < 10:
+                        Navigation.Bug(gc, unit, karb)
                 else:
                     gc.harvest(unit.id, d)
 
@@ -49,7 +53,8 @@ def manage_worker(gc, unit):
                     d = findViableDirection(gc, unit, "replicate")
                     if d is None:
                         if unit.movement_heat() < 10:
-                            WorkerMovement.findNearestKarb(gc, unit)
+                            karb = WorkerMovement.findNearestKarb(gc, unit)
+                            Navigation.Bug(gc, unit, karb)
                     else:
                         gc.replicate(unit.id, d)
                         #update globals
