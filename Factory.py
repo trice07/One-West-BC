@@ -1,5 +1,4 @@
 import battlecode as bc
-import random
 
 import Globals
 
@@ -65,7 +64,7 @@ def findViableDirection(gc, factory):
     Tries to unload a unit in a random direction. Takes in a GameController
     object and a factory as inputs.
     """
-    direction = random.choice(directions)
+    direction = factory.location.map_location().direction_to(Globals.radar.get_enemy_center(bc.Planet.Earth))
     for i in range(8):
         direction = direction.rotate_right()
         if gc.can_unload(factory.id, direction):
