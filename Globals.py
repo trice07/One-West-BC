@@ -14,6 +14,8 @@ ROCKET_ERROR = 2
 TURNS_TIL_LAUNCH = 5
 ROCKET_HEALTH_MIN = 50
 ROCKET_HEALTH_MIN_IF_ALMOST_FULL = 100
+REPLICATE_UNTIL = 7
+
 on_mars = False
 
 pathToEnemy = {}
@@ -23,3 +25,6 @@ earth_width = 0
 mars_width = 0
 earth_height = 0
 mars_height = 0
+wtime = 0
+rtime = 0
+

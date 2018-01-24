@@ -12,8 +12,8 @@ def findNearestKarb(gc, unit):
     :param unit: unit object
     :return: none
     """
-    closestKarb = sys.maxsize
     nearestLoc = None
+    closestKarb = sys.maxsize
     if gc.planet() == bc.Planet.Earth:
         carbs = Globals.radar.earth_karbonite_locations
     else:

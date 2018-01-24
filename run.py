@@ -11,6 +11,7 @@ import Rocket
 import Worker
 from Radar import Radar
 import Navigation
+import time
 
 # Pre-Game #
 
@@ -56,7 +57,9 @@ while True:
             Globals.radar.update_location(unit)
             if unit.location.is_on_map():
                 if unit.unit_type == bc.UnitType.Worker:
+                    s = time.time()
                     Worker.manage_worker(gc, unit)
+                    Globals.wtime += (time.time() - s)
                 elif unit.unit_type == bc.UnitType.Rocket:
                     Rocket.manage_rockets(gc, unit)
                 elif unit.unit_type == bc.UnitType.Healer:
@@ -68,9 +71,12 @@ while True:
                     pass
                     # Mage.manage_mages(gc, unit, Globals.earth_enemy_center, earth_enemy_map, Globals.us)
                 elif unit.unit_type == bc.UnitType.Ranger:
+                    s = time.time()
                     Ranger.turn(gc, unit)
+                    Globals.rtime += (time.time() - s)
                 elif unit.unit_type == bc.UnitType.Factory:
                     Factory.factory_manager(gc, unit)
+        print("Workers: ", Globals.wtime, "Rangers: ", Globals.rtime)
         Globals.radar.remove_dead_enemies()
 
     # Allows us to locate errors in the code

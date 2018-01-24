@@ -65,9 +65,11 @@ class Radar:
                 ml = bc.MapLocation(earth.planet, i, j)
                 to_add = Radar.get_init_type(ml, earth)
                 if to_add["karb"] != 0:
-                    self.earth_karbonite_locations.append(ml)
+                    self.earth_karbonite_locations.append([to_add["karb"], ml])
                 coords = Radar.get_coordinates(ml)
                 self.earth_map[coords] = to_add
+
+        self.earth_karbonite_locations.sort()
 
         # Initialize unit locations
         for unit in earth.initial_units:
@@ -86,9 +88,11 @@ class Radar:
                 ml = bc.MapLocation(mars.planet, i, j)
                 to_add = Radar.get_init_type(ml, mars)
                 if to_add["karb"] != 0:
-                    self.mars_karbonite_locations.append(ml)
+                    self.mars_karbonite_locations.append([to_add["karb"], ml])
                 coords = Radar.get_coordinates(ml)
                 self.mars_map[coords] = to_add
+
+        self.mars_karbonite_locations.sort()
 
     def update_unit_counts_earth(self, unit, command):
         t = unit.unit_type
