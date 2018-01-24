@@ -125,7 +125,7 @@ def avoidEnemies(gc, unit, destination):
     Bug(gc, unit, destination, True)
 
 
-def retreatFromKnownEnemy(gc, unit, enemy):
+def retreatFromKnownEnemy(gc, unit, enemyLocation):
     """
     Move such that distance from known enemy increases.
     :param gc: game controller
@@ -133,7 +133,6 @@ def retreatFromKnownEnemy(gc, unit, enemy):
     :param enemy: unit object of the enemy
     :return: True if able to move, False otherwise
     """
-    enemyLocation = enemy.location.map_location()
     unitLocation = unit.location.map_location()
     direction = unitLocation.direction_to(enemyLocation)
     retreatDirection = direction.opposite()

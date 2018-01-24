@@ -373,16 +373,18 @@ class Radar:
             center_x = self.enemy_earth_x_sum
             center_y = self.enemy_earth_y_sum
             count = len(self.earth_enemy_locations)
+            if len(cache) == 0:
+                return bc.MapLocation(bc.Planet.Earth, Globals.earth_width//2, Globals.earth_height//2)
         elif planet == bc.Planet.Mars:
             cache = self.mars_enemy_locations
             center_x = self.enemy_mars_x_sum
             center_y = self.enemy_mars_y_sum
             count = len(self.mars_enemy_locations)
+            if len(cache) == 0:
+                return bc.MapLocation(bc.Planet.Mars, Globals.mars_width//2, Globals.mars_height//2)
         else:
             return None
-        if len(cache) == 0:
-            return None
-        return bc.MapLocation(planet, center_x//count, center_y//count)  # Returns a MapLocation object that is at the center of the e forces
+        return bc.MapLocation(planet, center_x//count, center_y//count)
 
     def delete_enemy_from_radar(self, enemy):
         del Globals.radar.earth_enemy_locations[enemy.id]

@@ -1,40 +1,32 @@
 import battlecode as bc
-import random
+import Units
+import Globals
+import Navigation
 
-import Move
-
-directions=list(bc.Direction) #Stores all directions as a list
-random.seed(1) #Random seeding for testing. Will be removed
 
 def manage_healers(gc, unit):
     """
     Runs all of the healers. Takes in a GameController object and a unit as
     inputs.
     """
+    nearby_units = None
+    enemy_units = []
+    location = unit.location
+    if unit.location.is_on_map() and not location.is_in_garrison() and gc.is_heal_ready(unit.id):
+        nearby_units = gc.sense_nearby_units(location.map_location(), unit.attack_range())
+        for patient in nearby_units:
+            if unit.team == Globals.them:
+                enemy_units.append(patient)
+            elif gc.can_heal(unit.id, patient.id) and patient.health < patient.max_health:
+                gc.heal(unit.id, patient.id)
+                return
 
-    location=unit.location #Gets the units location
-    if unit.location.is_on_map():
-        direction=random.choice(directions) #Picks a direction
-        while direction==bc.Direction.Center: #Ensures that the direction is not center
-            direction=random.choice(directions)
-        weakest_unit=find_weakest_unit(gc)
-        if isinstance(weakest_unit, bc.Unit): #If there is a weakest unit on the map
-            if gc.can_heal(unit.id, weakest_unit.id) and gc.is_heal_ready(unit.id): #Try to heal it and if it cant, move towards it and try to heal until it is no longer the weakest unit on the map
-                gc.heal(unit.id, weakest_unit.id)
-            Move.Bug(gc, unit, weakest_unit.location.map_location())
-        else: #If there are no units that can be healed, the healer moves randomly
-            if gc.is_move_ready(unit.id) and gc.can_move(unit.id, direction):
-                gc.move_robot(unit.id, direction)
-              
-def find_weakest_unit(gc):
-    """
-    Returns the weakest non-healer unit on the board. Takes a GameController
-    object as an input.
-    """
-    weakest_val=250 #The max health of any possible unit
-    weakest_unit=None
-    for unit in gc.my_units():
-        if unit.unit_type!=bc.UnitType.Healer and unit.health<unit.max_health and unit.health<weakest_val: #If the unit is not another healer and has a health below its max and the current lowest health of any unit
-            weakest_val=unit.health
-            weakest_unit=unit
-    return weakest_unit 
+    if enemy_units == []:
+        enemy_units = Globals.radar.update_radar(gc, unit)
+    if gc.is_move_ready(unit.id):
+        should_retreat = Units.try_to_retreat(unit, enemy_units)
+        if should_retreat:
+            moved = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(unit.location.map_location().planet))
+            if moved:
+                return
+        Navigation.path_with_bfs(gc, unit)

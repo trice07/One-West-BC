@@ -43,14 +43,12 @@ def get_best_target_earth(gc, unit):
             if enemy.health <= unit.damage():
                 Globals.radar.being_shot_at_earth.remove(enemy)
                 Globals.radar.delete_enemy_from_radar(enemy)
-                print("Enemy Deleted")
             return enemy
     target_list = Globals.radar.update_radar(gc, unit)
     for target in target_list:
         if gc.can_attack(unit.id, target.id):
             if target.health <= unit.damage():
                 Globals.radar.delete_enemy_from_radar(target)
-                print("Enemy Deleted")
             else:
                 Globals.radar.being_shot_at_earth.append(target)
             return target
@@ -79,7 +77,6 @@ def get_best_target_mars(gc, unit):
 
 def try_go_to_rocket(gc, unit):
     if unit.id in Globals.rockets_queue and gc.is_move_ready(unit.id) and not unit.location.is_in_garrison():
-        print("HEADING TO ROCKET")
         rocket_location = Globals.rockets_queue[unit.id].location
         rocket_id = Globals.rockets_queue[unit.id].id
         if gc.can_load(rocket_id, unit.id):
@@ -88,4 +85,12 @@ def try_go_to_rocket(gc, unit):
         destination = rocket_location.map_location()
         Navigation.Bug(gc, unit, destination)
         return True
+    return False
+
+
+def try_to_retreat(unit, dangerous_enemies):
+    violent_enemies = [bc.UnitType.Ranger, bc.UnitType.Mage, bc.UnitType.Knight]
+    for e in dangerous_enemies:
+        if e.unit_type in violent_enemies and e.location.is_within_range(e.attack_range(), unit.location):
+            return True
     return False
