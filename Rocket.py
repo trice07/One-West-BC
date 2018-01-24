@@ -17,8 +17,9 @@ def manage_rockets(gc, unit):
         elif unit.id in Globals.rockets_waiting:
             to_remove = set()
             for astronaut in Globals.rockets_waiting[unit.id]["units_ready"]:
-                gc.load(unit.id, astronaut)
-                to_remove.add(astronaut)
+                if gc.can_load(unit.id, astronaut):
+                    gc.load(unit.id, astronaut)
+                    to_remove.add(astronaut)
             Globals.rockets_waiting[unit.id]["units_ready"] -= to_remove
             launch = False
             units_inside = len(unit.structure_garrison())

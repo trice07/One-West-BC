@@ -196,7 +196,7 @@ def reflectPoint(location):
     return newPt
 
 
-def BFS(map, start_location):
+def BFS(map, start_location, gc):
     # print("computing BFS", timeit.timeit())
     start = start_location
     d = bc.Direction.North
@@ -214,7 +214,7 @@ def BFS(map, start_location):
             while frontier:
                 #print(explored)
                 #debug(frontier)
-                frontier = exploreFrontier(frontier, map, parents)
+                frontier = exploreFrontier(frontier, map, parents, gc)
             if start.planet == bc.Planet.Earth:
                 Globals.pathToEnemy = parents
             else:
@@ -222,7 +222,7 @@ def BFS(map, start_location):
     # print("done with bfs", timeit.timeit())
 
 
-def exploreFrontier(frontier, map, parent):
+def exploreFrontier(frontier, map, parent, gc):
     newFrontier = []
     d = bc.Direction.North
     for f in frontier:
@@ -231,46 +231,48 @@ def exploreFrontier(frontier, map, parent):
             newLocation = f.add(d)
             if map.on_map(newLocation) and (newLocation.x, newLocation.y) not in parent:
                 if map.is_passable_terrain_at(newLocation):
+                    # if not gc.has_unit_at_location(newLocation):
                     parent[(newLocation.x, newLocation.y)] = f
                     newFrontier.append(newLocation)
     return newFrontier
 
 
-def reversePath(path, destination):
-    end = (destination.x, destination.y)
-    correctDirection = {}
-    while path[end] is not None:
-        correctDirection[(path[end].x, path[end].y)] = end
-        end = (path[end].x, path[end].y)
-    return correctDirection
 
-
-def debug(frontier):
-    frontier = [(frontier[i].x, frontier[i].y) for i in range(len(frontier))]
-    print(frontier)
-
-
-def allPairs(earth_map):
-    for i in range(earth_map.width):
-        for j in range(earth_map.height):
-            location = bc.MapLocation(bc.Planet.Earth, i, j)
-            x = BFS(earth_map, location)
-            Globals.paths[(i, j)] = x
-
-
-def optimalNav(gc, unit, destination):
-    ##nOT SO OPTIMAL
-    path = Globals.paths[(unit.location.map_location().x, unit.location.map_location().y)]
-    endpt = (destination.x, destination.y)
-    parent = path[endpt]
-    while parent != unit.location.map_location():
-        newSquare = parent
-        parent = path[newSquare]
-    direction = unit.location.map_location().direction_to(newSquare)
-    if gc.can_move(unit.id, direction):
-        gc.move_robot(unit.id, direction)
-    else:
-        Bug(gc, unit, destination)
+# def reversePath(path, destination):
+#     end = (destination.x, destination.y)
+#     correctDirection = {}
+#     while path[end] is not None:
+#         correctDirection[(path[end].x, path[end].y)] = end
+#         end = (path[end].x, path[end].y)
+#     return correctDirection
+#
+#
+# def debug(frontier):
+#     frontier = [(frontier[i].x, frontier[i].y) for i in range(len(frontier))]
+#     print(frontier)
+#
+#
+# def allPairs(earth_map):
+#     for i in range(earth_map.width):
+#         for j in range(earth_map.height):
+#             location = bc.MapLocation(bc.Planet.Earth, i, j)
+#             x = BFS(earth_map, location)
+#             Globals.paths[(i, j)] = x
+#
+#
+# def optimalNav(gc, unit, destination):
+#     ##nOT SO OPTIMAL
+#     path = Globals.paths[(unit.location.map_location().x, unit.location.map_location().y)]
+#     endpt = (destination.x, destination.y)
+#     parent = path[endpt]
+#     while parent != unit.location.map_location():
+#         newSquare = parent
+#         parent = path[newSquare]
+#     direction = unit.location.map_location().direction_to(newSquare)
+#     if gc.can_move(unit.id, direction):
+#         gc.move_robot(unit.id, direction)
+#     else:
+#         Bug(gc, unit, destination)
 
 
 def path_with_bfs(gc, unit):
@@ -296,6 +298,8 @@ def path_with_bfs(gc, unit):
                     return True
     except KeyError:
         direction = selfloc.direction_to(Globals.radar.get_enemy_center(selfloc.planet))
+        # if not get_back_on_path(gc, unit):
+        #     print("can't get on path")
         if gc.can_move(unit.id, direction):
             gc.move_robot(unit.id, direction)
         elif gc.can_move(unit.id, direction.rotate_left()):
@@ -304,7 +308,19 @@ def path_with_bfs(gc, unit):
             gc.move_robot(unit.id, direction.rotate_right())
 
 
-# def straightToEnemy(gc, unit):
+def get_back_on_path(gc, unit):
+    d = bc.Direction.North
+    loc = unit.location.map_location()
+    planet = loc.planet
+    path = Globals.pathToEnemy if planet == bc.Planet.Earth else Globals.pathToEnemyMars
+    for i in range(8):
+        newLoc = loc.add(d)
+        if (newLoc.x, newLoc.y) in path:
+            if gc.can_move(unit.id, d):
+                gc.move_robot(unit.id, d)
+                return True
+    return False
+#   def straightToEnemy(gc, unit):
 #     start = unit.location.map_location()
 #     Map = gc.starting_map(start.planet)
 #     initialUnits = Map.initial_units

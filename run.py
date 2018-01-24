@@ -43,11 +43,16 @@ while True:
     try:
         # Globals.radar.update_mars_karb(gc)
         # Unit Controls #
-        if gc.round() % 25 == 0:
-            Navigation.BFS(gc.starting_map(bc.Planet.Earth), Globals.radar.get_enemy_center(bc.Planet.Earth))
+        if gc.round() % 35 == 0:
+            Navigation.BFS(gc.starting_map(bc.Planet.Earth), Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
+            # print(Globals.pathToEnemy)
         for unit in gc.my_units():
             if Units.try_go_to_rocket(gc, unit):
                 continue
+            if unit.location.is_on_map():
+                if unit.location.map_location().planet == bc.Planet.Mars and Globals.on_mars is False:
+                    Globals.on_mars = True
+                    Navigation.BFS(gc.starting_map(bc.Planet.Mars), Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
             Globals.radar.update_location(unit)
             if unit.location.is_on_map():
                 if unit.unit_type == bc.UnitType.Worker:
