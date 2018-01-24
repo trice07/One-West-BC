@@ -18,34 +18,46 @@ def manage_worker(gc, unit):
     loc = unit.location.map_location()
     if loc.planet == bc.Planet.Earth:
         karb = WorkerMovement.findNearestKarb(gc, unit)
-        declot(gc, loc, unit, karb)
+        # declot(gc, loc, unit, karb)
+        if loc.planet == bc.Planet.Earth:
+            width = Globals.earth_width
+            height = Globals.earth_height
+        else:
+            width = Globals.earth_width
+            height = Globals.earth_height
         if Globals.radar.our_num_earth_workers < 6:
             d = findViableDirection(gc, unit, "replicate")
             if d:
                 gc.replicate(unit.id, d)
 
-        nearby = gc.sense_nearby_units(loc, unit.vision_range)
+        nearby = gc.sense_nearby_units(loc, 2)
+        count = 0
         for other in nearby:
-            otherloc = other.location.map_location()
-            direction = loc.direction_to(otherloc)
+            # otherloc = other.location.map_location()
+            # direction = loc.direction_to(otherloc)
             if other.unit_type == bc.UnitType.Rocket or other.unit_type == bc.UnitType.Factory:
                 if gc.can_build(unit.id, other.id):
                     gc.build(unit.id, other.id)
+                    count += 1
                     return
-                elif not other.structure_is_built():
-                    if gc.is_move_ready(unit.id):
-                        if gc.can_move(unit.id, direction):
-                            gc.move_robot(unit.id, direction)
-                            return
-            elif other.health < other.max_health / 4:
-                if gc.can_repair(unit.id, other.id):
-                    gc.repair(unit.id, other.id)
-                    return
+                # elif not other.structure_is_built():
+                #     if gc.is_move_ready(unit.id):
+                #         if gc.can_move(unit.id, direction):
+                #             gc.move_robot(unit.id, direction)
+                #             return
+                elif other.health < other.max_health / 4:
+                    if gc.can_repair(unit.id, other.id):
+                        gc.repair(unit.id, other.id)
+                        return
+                elif other.unit_type == bc.UnitType.Worker:
+                    count += 1
                 # else:
                 #     if gc.is_move_ready(unit.id):
                 #         if gc.can_move(unit.id, direction):
                 #             gc.move_robot(unit.id, direction)
                 #             return
+
+        declot(gc, unit, count, width, height, karb)
 
         if Globals.radar.our_num_earth_factories < 5:
             d = findViableDirection(gc, unit, "blueprintf")
@@ -97,19 +109,8 @@ def manage_worker(gc, unit):
                 Navigation.Bug(gc, unit, karb)
 
 
-def declot(gc, loc, unit, desloc):
-    clot = gc.sense_nearby_units(loc, 2)
-    if loc.planet == bc.Planet.Earth:
-        width = Globals.earth_width
-        height = Globals.earth_height
-    else:
-        width = Globals.earth_width
-        height = Globals.earth_height
-
-    count = 0
-    for unit in clot:
-        if unit.unit_type != bc.UnitType.Ranger or unit.unit_type != bc.UnitType.Healer:
-            count += 1
+def declot(gc, unit, count, width, height, desloc):
+    loc = unit.location.map_location()
     if count > 4:
         if gc.is_move_ready(unit.id):
             Navigation.Bug(gc, unit, desloc)
