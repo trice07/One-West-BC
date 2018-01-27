@@ -22,23 +22,22 @@ def factory_manager(gc, unit):
         #     if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
         #         gc.produce_robot(unit.id, bc.UnitType.Mage)
         #         units_produced += 1
-    # if gc.round() > 100:
-    #     if gc.round() % 4 == 0:
-    #         if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
-    #             gc.produce_robot(unit.id, bc.UnitType.Mage)
-    #             units_produced += 1
-    # if gc.round() % 6 == 0:  # Every six units produce a healer
-    #     if gc.can_produce_robot(unit.id, bc.UnitType.Healer):
-    #         gc.produce_robot(unit.id, bc.UnitType.Healer)
-    #         units_produced += 1
+    if Globals.radar.our_num_earth_healers < .5*Globals.radar.our_num_earth_rangers:
+        if gc.can_produce_robot(unit.id, bc.UnitType.Healer):
+            gc.produce_robot(unit.id, bc.UnitType.Healer)
+            units_produced += 1
+    else:  # Every six units produce a healer
+        if gc.can_produce_robot(unit.id, bc.UnitType.Ranger):
+            gc.produce_robot(unit.id, bc.UnitType.Ranger)
+            units_produced += 1
     # if gc.round() % 3 == 0:  # Every two units produce a ranger
     #     if gc.can_produce_robot(unit.id, bc.UnitType.Ranger):
     #         gc.produce_robot(unit.id, bc.UnitType.Ranger)
     #         units_produced += 1
-    else:  # Otherwise, produce rangers
-        if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
-            gc.produce_robot(unit.id, bc.UnitType.Mage)
-            units_produced += 1
+    # else:  # Otherwise, produce rangers
+    #     if gc.can_produce_robot(unit.id, bc.UnitType.Ranger):
+    #         gc.produce_robot(unit.id, bc.UnitType.Ranger)
+    #         units_produced += 1
     # else:
     #     if gc.round() % 5 == 0:  # After round 100, only produce units every 5 rounds (time spent garrisoned) if we have enough to build a factory
     #         if num_earth_workers == 0:  # If there are no workers left or there are three times as many soldiers, produce a worker

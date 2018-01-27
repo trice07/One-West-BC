@@ -1,4 +1,4 @@
-import battlecode as bc
+import battelcode as bc
 
 class Healers(unit): 
 

@@ -87,10 +87,3 @@ def try_go_to_rocket(gc, unit):
         return True
     return False
 
-
-def try_to_retreat(unit, dangerous_enemies):
-    violent_enemies = [bc.UnitType.Ranger, bc.UnitType.Mage, bc.UnitType.Knight]
-    for e in dangerous_enemies:
-        if e.unit_type in violent_enemies and e.location.is_within_range(e.attack_range(), unit.location):
-            return True
-    return False

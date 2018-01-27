@@ -72,7 +72,7 @@ def call_units_to_rocket(gc, rocket):
         elif u.unit_type == bc.UnitType.Healer:
             healers = update_rocket_closest(healers, u, location, Globals.NUM_ROCKET_HEALERS)
         elif u.unit_type == bc.UnitType.Mage:
-            healers = update_rocket_closest(mages, u, location, Globals.NUM_ROCKET_MAGES)
+            mages = update_rocket_closest(mages, u, location, Globals.NUM_ROCKET_MAGES)
     q = Globals.rockets_queue
     num_units_to_wait_for = 0
     for r in rangers:

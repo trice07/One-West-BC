@@ -21,14 +21,22 @@ def manage_healers(gc, unit):
                 gc.heal(unit.id, patient.id)
                 return
 
-    if enemy_units == []:
+    if len(enemy_units) == 0:
         enemy_units = Globals.radar.update_radar(gc, unit)
     if gc.is_move_ready(unit.id):
-        should_retreat = Units.try_to_retreat(unit, enemy_units)
+        e, should_retreat = healer_retreat(unit, enemy_units)
         if should_retreat:
-            moved = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(unit.location.map_location().planet))
+            moved = Navigation.retreatFromKnownEnemy(gc, unit, e.location.map_location())
             if moved:
                 return
         planet = location.map_location().planet
         path = Globals.pathToEnemy if planet == bc.Planet.Earth else Globals.pathToEnemyMars
         Navigation.path_with_bfs(gc, unit, path)
+
+
+def healer_retreat(unit, dangerous_enemies):
+    violent_enemies = [bc.UnitType.Ranger, bc.UnitType.Mage, bc.UnitType.Knight]
+    for e in dangerous_enemies:
+        if e.unit_type in violent_enemies and e.location.is_within_range(e.attack_range(), unit.location):
+            return e, True
+    return None, False

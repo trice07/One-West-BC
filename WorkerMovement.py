@@ -1,6 +1,6 @@
 import battlecode as bc
 import sys
-
+import time
 import Globals
 import Navigation
 
@@ -18,9 +18,11 @@ def findNearestKarb(gc, unit):
         carbs = Globals.radar.earth_karbonite_locations
     else:
         carbs = Globals.radar.mars_karbonite_locations
+    s = time.time()
     for carboLoad in carbs:
         if carboLoad.distance_squared_to(unit.location.map_location()) < closestKarb:
             closestKarb = carboLoad.distance_squared_to(unit.location.map_location())
             nearestLoc = carboLoad
-    return nearestLoc
+    Globals.ftime = (time.time()-s)
+    return closestKarb, nearestLoc
 

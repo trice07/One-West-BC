@@ -22,7 +22,7 @@ def turn(gc, unit):
         print("What the f")
         return
     if gc.is_move_ready(unit.id):
-        if Units.try_to_retreat(unit, nearby_enemies):
+        if ranger_retreat(unit):
             moved = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(unit.location.map_location().planet))
             if moved:
                 return
@@ -30,3 +30,7 @@ def turn(gc, unit):
         path = Globals.pathToEnemy if planet == bc.Planet.Earth else Globals.pathToEnemyMars
         Navigation.path_with_bfs(gc, unit, path)
     return
+
+
+def ranger_retreat(unit):
+    return unit.health <= unit.max_health/10
