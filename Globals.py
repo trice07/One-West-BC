@@ -17,7 +17,8 @@ ROCKET_HEALTH_MIN_IF_ALMOST_FULL = 100
 REPLICATE_UNTIL = 7
 PRODUCE_HEALER_CONSTANT = -30
 MAX_WORKERS = 50
-
+BEGINNING_WORKER_LIMIT = 7
+MAX_FACTORIES = 6
 
 income = 0
 prev_karb_amount = 0
@@ -29,7 +30,7 @@ updatePath = {}
 updatePathMars = {}
 pathsToKarb ={}
 workers_factory_duty = {}
-
+asteroid_pattern = None
 earth_width = 0
 mars_width = 0
 earth_height = 0

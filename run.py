@@ -22,18 +22,9 @@ if Globals.us == bc.Team.Red: #Assigns a value to the enemy team
 else:
     Globals.them = bc.Team.Red
 Research.fill_research_queue(gc)  # Fills the research queue
-
-# earth_map=Map.initialize_earth_map(gc) #Gets the earth GameMap represented as a dictionary for Earth
-# earth_enemy_map=Map.get_enemy_map(earth_map, Globals.us) #Gets the initial enemy map of Earth
-# earth_width, earth_width=Map.get_map_size(earth_map) #Gets the dimensions of Earth
-#
-# mars_map=Map.initialize_mars_map(gc) #Gets the mars GameMap represented as a dictionary for Earth
-# mars_enemy_map=Map.get_enemy_map(mars_map, Globals.us) #Gets the initial enemy_map of Mars
-# mars_width, mars_height=Map.get_map_size(mars_map)
-
 Globals.radar = Radar(gc.starting_map(bc.Planet.Earth), gc.starting_map(bc.Planet.Mars))
 Globals.earth_enemy_center = Globals.radar.get_enemy_center(bc.Planet.Earth)  # The center of starting enemy units on Earth
-
+Globals.asteroid_pattern = gc.asteroid_pattern()
 
 while True:
     # Start of Turn Updates #
@@ -47,6 +38,11 @@ while True:
         if gc.round() % 35 == 0:
             Navigation.BFS(gc.starting_map(bc.Planet.Earth), Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
             # print(Globals.pathToEnemy)
+        asteroid = None
+        if Globals.asteroid_pattern.has_asteroid(gc.round()):
+            asteroid = Globals.asteroid_pattern.asteroid(gc.round())
+        if asteroid is not None:
+            Globals.radar.update_karb_amount(gc, asteroid.location)
         for unit in gc.my_units():
             if Units.try_go_to_rocket(gc, unit):
                 continue

@@ -281,6 +281,7 @@ def path_with_bfs(gc, unit, path):
         # direction = selfloc.direction_to(Globals.radar.get_enemy_center(selfloc.planet))
         if unit.unit_type == bc.UnitType.Worker:
             move_on_path(gc, unit, selfloc, path)
+            return
         if not move_on_path(gc, unit, selfloc, path):
             if Globals.updatePath:
                 move_on_path(gc, unit, selfloc, Globals.updatePath)

@@ -76,14 +76,16 @@ def get_best_target_mars(gc, unit):
 
 
 def try_go_to_rocket(gc, unit):
-    if unit.id in Globals.rockets_queue and gc.is_move_ready(unit.id) and not unit.location.is_in_garrison():
-        rocket_location = Globals.rockets_queue[unit.id].location
-        rocket_id = Globals.rockets_queue[unit.id].id
-        if gc.can_load(rocket_id, unit.id):
-            Globals.rockets_waiting[rocket_id]["units_ready"].add(unit.id)
-            return True
-        destination = rocket_location.map_location()
-        Navigation.Bug(gc, unit, destination)
-        return True
-    return False
+    for f in Globals.rockets_queue:
+        for poss in gc.sense_nearby_units(unit.location.map_location(), 2):
+            if poss.unit_type == bc.UnitType.Rocket:
+                if gc.can_load(poss.id, unit.id):
+                    gc.load(poss.id, unit.id)
+                    return
+
+        if unit.id in Globals.rockets_queue[f] and gc.is_move_ready(unit.id):
+            Navigation.path_with_bfs(gc, unit, Globals.rockets_queue[f])
+            print("going to rocket")
+            return
+
 
