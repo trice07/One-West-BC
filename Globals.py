@@ -18,6 +18,9 @@ on_mars = False
 
 pathToEnemy = {}
 pathToEnemyMars = {}
+updatePath = {}
+updatePathMars = {}
+pathsToKarb ={}
 
 earth_width = 0
 mars_width = 0

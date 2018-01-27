@@ -11,7 +11,7 @@ import Rocket
 import Worker
 from Radar import Radar
 import Navigation
-
+import Mage
 # Pre-Game #
 
 gc = bc.GameController() #Creates a game controller to connect to a running game
@@ -29,30 +29,36 @@ Research.fill_research_queue(gc)  # Fills the research queue
 # mars_map=Map.initialize_mars_map(gc) #Gets the mars GameMap represented as a dictionary for Earth
 # mars_enemy_map=Map.get_enemy_map(mars_map, Globals.us) #Gets the initial enemy_map of Mars
 # mars_width, mars_height=Map.get_map_size(mars_map)
-
-Globals.radar = Radar(gc.starting_map(bc.Planet.Earth), gc.starting_map(bc.Planet.Mars))
-Globals.earth_enemy_center = Globals.radar.get_enemy_center(bc.Planet.Earth)  # The center of starting enemy units on Earth
-
+earth_map = gc.starting_map(bc.Planet.Earth)
+mars_map = gc.starting_map(bc.Planet.Mars)
+Globals.radar = Radar(earth_map, mars_map)  # The center of starting enemy units on Earth
+Globals.pathToEnemy = Navigation.BFS(earth_map, Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
+Globals.pathToEnemyMars = Navigation.BFS(mars_map, Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
+# print("pathing")
+Navigation.BFSKarb(earth_map, gc)
+# print("pathing done")
 
 while True:
     # Start of Turn Updates #
     
     # print("Round: ", gc.round())
     # print("Karbonite: ", gc.karbonite())
-        
     try:
         # Globals.radar.update_mars_karb(gc)
         # Unit Controls #
-        if gc.round() % 35 == 0:
-            Navigation.BFS(gc.starting_map(bc.Planet.Earth), Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
+        if gc.round() % 10 == 0:
+            if Globals.radar.our_num_mars_rockets > 0:
+                Globals.updatePathMars = Navigation.BFS(mars_map, Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
+            if Globals.radar.our_num_earth_rangers > 0:
+                Globals.updatePath = Navigation.BFS(earth_map, Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
             # print(Globals.pathToEnemy)
         for unit in gc.my_units():
             if Units.try_go_to_rocket(gc, unit):
                 continue
-            if unit.location.is_on_map():
-                if unit.location.map_location().planet == bc.Planet.Mars and Globals.on_mars is False:
-                    Globals.on_mars = True
-                    Navigation.BFS(gc.starting_map(bc.Planet.Mars), Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
+            # if unit.location.is_on_map():
+                # if unit.location.map_location().planet == bc.Planet.Mars and Globals.on_mars is False:
+                #     Globals.on_mars = True
+                #     Navigation.BFS(gc.starting_map(bc.Planet.Mars), Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
             Globals.radar.update_location(unit)
             if unit.location.is_on_map():
                 if unit.unit_type == bc.UnitType.Worker:
@@ -65,8 +71,7 @@ while True:
                     pass
                     # Knight.manage_knights(gc, unit, Globals.earth_enemy_center, earth_enemy_map, eneGlobals.us)
                 elif unit.unit_type == bc.UnitType.Mage:
-                    pass
-                    # Mage.manage_mages(gc, unit, Globals.earth_enemy_center, earth_enemy_map, Globals.us)
+                    Mage.manage_mages(gc, unit)
                 elif unit.unit_type == bc.UnitType.Ranger:
                     Ranger.turn(gc, unit)
                 elif unit.unit_type == bc.UnitType.Factory:

@@ -15,98 +15,108 @@ def manage_worker(gc, unit):
     the list of factories, and the list of rockets as inputs.
     """
     #earth worker logic
-    loc = unit.location.map_location()
-    if loc.planet == bc.Planet.Earth:
-        karb = WorkerMovement.findNearestKarb(gc, unit)
-        # declot(gc, loc, unit, karb)
+    if unit.location.is_in_garrison() or not unit.location.is_on_map():
+        return
+    else:
+        loc = unit.location.map_location()
+        h, bf, br, r = findViableDirection(gc, unit)
         if loc.planet == bc.Planet.Earth:
-            width = Globals.earth_width
-            height = Globals.earth_height
-        else:
-            width = Globals.earth_width
-            height = Globals.earth_height
-        if Globals.radar.our_num_earth_workers < 6:
-            d = findViableDirection(gc, unit, "replicate")
-            if d:
-                gc.replicate(unit.id, d)
+            # karb = WorkerMovement.findNearestKarb(gc, unit)
+            # declot(gc, loc, unit, karb)
+            # if loc.planet == bc.Planet.Earth:
+            #     width = Globals.earth_width
+            #     height = Globals.earth_height
+            # else:
+            #     width = Globals.earth_width
+            #     height = Globals.earth_height
 
-        nearby = gc.sense_nearby_units(loc, 2)
-        count = 0
-        for other in nearby:
-            # otherloc = other.location.map_location()
-            # direction = loc.direction_to(otherloc)
-            if other.unit_type == bc.UnitType.Rocket or other.unit_type == bc.UnitType.Factory:
-                if gc.can_build(unit.id, other.id):
-                    gc.build(unit.id, other.id)
-                    count += 1
-                    return
-                # elif not other.structure_is_built():
-                #     if gc.is_move_ready(unit.id):
-                #         if gc.can_move(unit.id, direction):
-                #             gc.move_robot(unit.id, direction)
-                #             return
-                elif other.health < other.max_health / 4:
-                    if gc.can_repair(unit.id, other.id):
-                        gc.repair(unit.id, other.id)
+            nearby = gc.sense_nearby_units(loc, 2)
+            # count = 0
+            for other in nearby:
+                # otherloc = other.location.map_location()
+                # direction = loc.direction_to(otherloc)
+                if other.unit_type == bc.UnitType.Rocket or other.unit_type == bc.UnitType.Factory:
+                    if gc.can_build(unit.id, other.id):
+                        gc.build(unit.id, other.id)
+                        # count += 1
                         return
-                elif other.unit_type == bc.UnitType.Worker:
-                    count += 1
-                # else:
-                #     if gc.is_move_ready(unit.id):
-                #         if gc.can_move(unit.id, direction):
-                #             gc.move_robot(unit.id, direction)
-                #             return
+                    # elif not other.structure_is_built():
+                    #     if gc.is_move_ready(unit.id):
+                    #         if gc.can_move(unit.id, direction):
+                    #             gc.move_robot(unit.id, direction)
+                    #             return
+                    elif other.health < other.max_health / 4:
+                        if gc.can_repair(unit.id, other.id):
+                            gc.repair(unit.id, other.id)
+                            return
+                    # else:
+                    #     if gc.is_move_ready(unit.id):
+                    #         if gc.can_move(unit.id, direction):
+                    #             gc.move_robot(unit.id, direction)
+                    #             return
 
-        declot(gc, unit, count, width, height, karb)
+            # declot(gc, unit, count, width, height, karb)
 
-        if Globals.radar.our_num_earth_factories < 5:
-            d = findViableDirection(gc, unit, "blueprintf")
-            if d is None:
-                d = findViableDirection(gc, unit, "harvest")
-                if d:
-                    gc.harvest(unit.id, d)
+            if Globals.radar.our_num_earth_workers < 5:
+                if r:
+                    gc.replicate(unit.id, r)
+                    return
+                elif bf:
+                    gc.blueprint(unit.id, bc.UnitType.Factory, bf)
+                    return
+
+            if Globals.radar.our_num_earth_factories < 5:
+                if bf:
+                    gc.blueprint(unit.id, bc.UnitType.Factory, bf)
+                    return
+                elif h:
+                    gc.harvest(unit.id, h)
+                    return
+                elif h is None and Globals.radar.our_num_earth_workers < 35:
+                    if r:
+                        gc.replicate(unit.id, r)
+                        return
                 else:
-                    d = loc.direction_to(karb)
-                    if gc.can_replicate(unit.id, d) and Globals.radar.our_num_earth_workers < 25:
-                        gc.replicate(unit.id, d)
-            else:
-                gc.blueprint(unit.id, bc.UnitType.Factory, d)
-
-        if gc.round() > 100:
-            if Globals.radar.our_num_mars_rangers < 10 or Globals.radar.our_num_mars_workers < 5:
-                d = findViableDirection(gc, unit, "blueprintr")
-                if d is None:
                     if gc.is_move_ready(unit.id):
-                        Navigation.Bug(gc, unit, karb)
+                        Navigation.karbpath(gc, unit, loc)
                         return
-                else:
-                    gc.blueprint(unit.id, bc.UnitType.Rocket, d)
 
-        # d = findViableDirection(gc, unit, "harvest")
-        # if d is None:
-        #     karbDir = loc.direction_to(karb)
-        #     if gc.can_replicate(unit.id, karbDir) and gc.karbonite() > 150:
-        #         gc.replicate(unit.id, karbDir)
-        #     elif gc.is_move_ready(unit.id):
-        #         Navigation.Bug(gc, unit, karb)
-        #         return
-        # else:
-        #     gc.harvest(unit.id, d)
 
-    #mars worker logic
-    elif loc.planet == bc.Planet.Mars:
-        karb = WorkerMovement.findNearestKarb(gc, unit)
-        if Globals.radar.their_num_mars_rockets > 0 or gc.round() > 700:
-            d = findViableDirection(gc, unit, "replicate")
-            if d is None:
-                if gc.is_move_ready(unit.id):
-                    Navigation.Bug(gc, unit, karb)
-                    return
+            if gc.round() > 100:
+                if Globals.radar.our_num_mars_rangers < 10 or Globals.radar.our_num_mars_workers < 5 or Globals.radar.their_num_earth_rangers < 5:
+                    if br:
+                        gc.blueprint(unit.id, bc.UnitType.Rocket, br)
+                    elif h:
+                        gc.harvest(unit.id, h)
+                    else:
+                        if gc.is_move_ready(unit.id):
+                            Navigation.karbpath(gc, unit, loc)
+                            return
+
+
+            # d = findViableDirection(gc, unit, "harvest")
+            # if d is None:
+            #     karbDir = loc.direction_to(karb)
+            #     if gc.can_replicate(unit.id, karbDir) and gc.karbonite() > 150:
+            #         gc.replicate(unit.id, karbDir)
+            #     elif gc.is_move_ready(unit.id):
+            #         Navigation.Bug(gc, unit, karb)
+            #         return
+            # else:
+            #     gc.harvest(unit.id, d)
+
+        #mars worker logic
+        elif loc.planet == bc.Planet.Mars:
+            # karb = WorkerMovement.findNearestKarb(gc, unit)
+            if Globals.radar.their_num_mars_rockets > 0 or gc.round() > 700:
+                if r:
+                    gc.replicate(unit.id, r)
             else:
-                gc.replicate(unit.id, d)
-        else:
-            if gc.is_move_ready(unit.id):
-                Navigation.Bug(gc, unit, karb)
+                if h:
+                    gc.harvest(unit.id, h)
+                else:
+                    if r:
+                        gc.replicate(unit.id, r)
 
 
 def declot(gc, unit, count, width, height, desloc):
@@ -121,25 +131,25 @@ def declot(gc, unit, count, width, height, desloc):
                 Navigation.Bug(gc, unit, desloc)
 
 
-def findViableDirection(gc, unit, action):
+def findViableDirection(gc, unit):
     d = random.choice(directions)
+    h, bf, br, r = None, None, None, None
     for i in range(8):
         d= d.rotate_right()
-        if action == "harvest":
-            if gc.can_harvest(unit.id, bc.Direction.Center):
-                return bc.Direction.Center
-            elif gc.can_harvest(unit.id, d):
-                return d
-        if action == "blueprintf":
-            if gc.can_blueprint(unit.id, bc.UnitType.Factory, d):
-                return d
-        if action == "blueprintr":
-            if gc.can_blueprint(unit.id, bc.UnitType.Rocket, d):
-                return d
-        if action == "replicate":
-            if gc.can_replicate(unit.id, d):
-                return d
-    return None
+        if gc.can_harvest(unit.id, bc.Direction.Center):
+            h = bc.Direction.Center
+        elif gc.can_harvest(unit.id, d):
+            h = d
+
+        if gc.can_blueprint(unit.id, bc.UnitType.Factory, d):
+            bf = d
+
+        if gc.can_blueprint(unit.id, bc.UnitType.Rocket, d):
+            br = d
+
+        if gc.can_replicate(unit.id, d):
+            r = d
+    return h, bf, br, r
 
 
 #     global num_rockets

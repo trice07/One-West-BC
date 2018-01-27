@@ -17,21 +17,23 @@ def Bug(gc, unit, destination, defense=False):
     """
     location = unit.location.map_location()
     # print("Current Location: " + str(location.x) + ", " + str(location.y))
-    direction = location.direction_to(destination)
-    if defense:
-        if gc.can_move(unit.id, direction) and not isDangerousLocation(gc, unit, location.add(direction)):
-            # print("moving in direction")
-            #if unit.movement_heat() < 10:
-            gc.move_robot(unit.id, direction)
+    if destination:
+        direction = location.direction_to(destination)
+        if defense:
+            if gc.can_move(unit.id, direction) and not isDangerousLocation(gc, unit, location.add(direction)):
+                # print("moving in direction")
+                #if unit.movement_heat() < 10:
+                gc.move_robot(unit.id, direction)
+            else:
+                startBugging(gc, unit, location, direction, destination, True)
         else:
-            startBugging(gc, unit, location, direction, destination, True)
-    else:
-        if gc.can_move(unit.id, direction):
-            # print("moving in direction")
-            #if unit.movement_heat() < 10:
-            gc.move_robot(unit.id, direction)
-        else:
-            startBugging(gc, unit, location, direction, destination)
+            if gc.can_move(unit.id, direction):
+                # print("moving in direction")
+                #if unit.movement_heat() < 10:
+                gc.move_robot(unit.id, direction)
+            else:
+                startBugging(gc, unit, location, direction, destination)
+
 
 
 def startBugging(gc, unit, start, direction, destination, defense=False):
@@ -195,9 +197,8 @@ def reflectPoint(location):
     return newPt
 
 
-def BFS(map, start_location, gc):
+def BFS(map, start, gc):
     # print("computing BFS", timeit.timeit())
-    start = start_location
     d = bc.Direction.North
     for i in range(8):
         loc = start.add(d)
@@ -214,11 +215,7 @@ def BFS(map, start_location, gc):
                 #print(explored)
                 #debug(frontier)
                 frontier = exploreFrontier(frontier, map, parents, gc)
-            if start.planet == bc.Planet.Earth:
-                Globals.pathToEnemy = parents
-            else:
-                Globals.pathToEnemyMars = parents
-    # print("done with bfs", timeit.timeit())
+            return parents
 
 
 def exploreFrontier(frontier, map, parent, gc):
@@ -230,9 +227,9 @@ def exploreFrontier(frontier, map, parent, gc):
             newLocation = f.add(d)
             if map.on_map(newLocation) and (newLocation.x, newLocation.y) not in parent:
                 if map.is_passable_terrain_at(newLocation):
-                    # if not gc.has_unit_at_location(newLocation):
-                    parent[(newLocation.x, newLocation.y)] = f
-                    newFrontier.append(newLocation)
+                    if not gc.has_unit_at_location(newLocation):
+                        parent[(newLocation.x, newLocation.y)] = f
+                        newFrontier.append(newLocation)
     return newFrontier
 
 
@@ -274,37 +271,60 @@ def exploreFrontier(frontier, map, parent, gc):
 #         Bug(gc, unit, destination)
 
 
-def path_with_bfs(gc, unit):
+def path_with_bfs(gc, unit, path):
     #also too slow
-    selfloc = unit.location.map_location()
-    planet = selfloc.planet
-    path = Globals.pathToEnemy if planet == bc.Planet.Earth else Globals.pathToEnemyMars
-    try:
-        move = path[(selfloc.x, selfloc.y)]
+    if unit.location.is_in_garrison() or not unit.location.is_on_map():
+        return
+    else:
+        selfloc = unit.location.map_location()
+        # planet = selfloc.planet
+        # direction = selfloc.direction_to(Globals.radar.get_enemy_center(selfloc.planet))
+        if unit.unit_type == bc.UnitType.Worker:
+            move_on_path(gc, unit, selfloc, path)
+        if not move_on_path(gc, unit, selfloc, path):
+            if Globals.updatePath:
+                move_on_path(gc, unit, selfloc, Globals.updatePath)
+            else:
+               return
 
-# print(move.x, move.y)
+            # if not get_back_on_path(gc, unit):
+            #     print("can't get on path")
+            # if gc.can_move(unit.id, direction):
+            #     gc.move_robot(unit.id, direction)
+            # elif gc.can_move(unit.id, direction.rotate_left()):
+            #     gc.move_robot(unit.id, direction.rotate_left())
+            # elif gc.can_move(unit.id, direction.rotate_right()):
+            #     gc.move_robot(unit.id, direction.rotate_right())
+
+
+def move_on_path(gc, unit, loc, path):
+    d = loc.direction_to(Globals.radar.get_enemy_center(loc.planet))
+    try:
+        move = path[(loc.x, loc.y)]
         if move:
-            direction = unit.location.map_location().direction_to(move)
-            if gc.can_move(unit.id, direction):
-                gc.move_robot(unit.id, direction)
+            direction = loc.direction_to(move)
+            if try_to_move(gc, unit, direction):
                 return True
             else:
-                if gc.can_move(unit.id, direction.rotate_right()):
-                    gc.move_robot(unit.id, direction.rotate_right())
-                    return True
-                elif gc.can_move(unit.id, direction.rotate_left()):
-                    gc.move_robot(unit.id, direction.rotate_left())
-                    return True
+                return False
+
     except KeyError:
-        direction = selfloc.direction_to(Globals.radar.get_enemy_center(selfloc.planet))
-        # if not get_back_on_path(gc, unit):
-        #     print("can't get on path")
-        if gc.can_move(unit.id, direction):
-            gc.move_robot(unit.id, direction)
-        elif gc.can_move(unit.id, direction.rotate_left()):
-            gc.move_robot(unit.id, direction.rotate_left())
-        elif gc.can_move(unit.id, direction.rotate_right()):
-            gc.move_robot(unit.id, direction.rotate_right())
+        if try_to_move(gc, unit, d):
+            return True
+        return False
+
+
+def try_to_move(gc, unit, d):
+    if gc.can_move(unit.id, d):
+        gc.move_robot(unit.id, d)
+        return True
+    elif gc.can_move(unit.id, d):
+        gc.move_robot(unit.d, d.rotate_right())
+        return True
+    elif gc.can_move(unit.id, d.rotate_left()):
+        gc.move_robot(unit.id, d.rotate_left())
+        return True
+    return False
 
 
 def get_back_on_path(gc, unit):
@@ -357,22 +377,35 @@ def findQuadrants(planetmap):
     return quadrantCenters
 
 
-# def moveTowardsEnemy(gc, unit, map):
-#     width = map.width
-#     height = map.height
-#     xhalf = math.floor(map.width / 2)
-#     yhalf = math.floor(map.height / 2)
-#     x = unit.location.map_location().x
-#     y = unit.location.map_location().y
-#     whichquad = None
-#     if x < xhalf and y < yhalf:
-#         whichquad = 0
-#     if x > xhalf and y < yhalf:
-#         whichquad = 1
-#     if x < xhalf and y > yhalf:
-#         whichquad = 2
-#     if x > xhalf and y > yhalf:
-#         whichquad = 3
+def BFSKarb(map, gc):
+    carbs = Globals.radar.earth_karbonite_locations
+    for x in carbs:
+        Globals.pathsToKarb[(x.x, x.y)]= (BFS(map, x, gc))
+
+
+def karbpath(gc, unit, loc):
+    toRemove = []
+    for path in Globals.pathsToKarb:
+        karb = bc.MapLocation(loc.planet, path[0], path[1])
+        if gc.can_sense_location(karb):
+            if gc.karbonite_at(karb) == 0:
+                toRemove.append(path)
+                continue
+        # print(path)
+        if Globals.pathsToKarb[path]:
+            try:
+                move = Globals.pathsToKarb[path][(loc.x, loc.y)]
+                if move:
+                    d = loc.direction_to(move)
+                    try_to_move(gc, unit, d)
+                    return
+            except KeyError:
+                continue
+        else:
+            continue
+    for spent in toRemove:
+        del Globals.pathsToKarb[spent]
+
 
 
 

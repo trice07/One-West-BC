@@ -26,5 +26,7 @@ def turn(gc, unit):
             moved = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(unit.location.map_location().planet))
             if moved:
                 return
-        Navigation.path_with_bfs(gc, unit)
+        planet = unit.location.map_location().planet
+        path = Globals.pathToEnemy if planet == bc.Planet.Earth else Globals.pathToEnemyMars
+        Navigation.path_with_bfs(gc, unit, path)
     return
