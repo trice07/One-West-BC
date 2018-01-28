@@ -43,30 +43,41 @@ def get_quadrant(planetmap, loc):
 def karbBFS(map, quadrants):
     karbDests = {}
     farKarbDests = {}
-    karb = Globals.radar.earth_karbonite_locations
+    if map.planet == bc.Planet.Earth:
+        karb = Globals.radar.earth_karbonite_locations
+    else:
+        karb = Globals.radar.mars_karbonite_locations
+
     for deposit in karb:
         quad = get_quadrant(map, deposit)
         if quad in quadrants:
             if quad in karbDests:
-                karbDests[quad].append(bc.MapLocation(bc.Planet.Earth, deposit[0], deposit[1]))
+                karbDests[quad].append(bc.MapLocation(map.planet, deposit[0], deposit[1]))
             else:
-                karbDests[quad] = [bc.MapLocation(bc.Planet.Earth, deposit[0], deposit[1])]
+                karbDests[quad] = [bc.MapLocation(map.planet, deposit[0], deposit[1])]
         else:
             if quad in farKarbDests:
-                farKarbDests[quad].append(bc.MapLocation(bc.Planet.Earth, deposit[0], deposit[1]))
+                farKarbDests[quad].append(bc.MapLocation(map.planet, deposit[0], deposit[1]))
             else:
-                farKarbDests[quad] = [bc.MapLocation(bc.Planet.Earth, deposit[0], deposit[1])]
-    Globals.farKarb = farKarbDests
+                farKarbDests[quad] = [bc.MapLocation(map.planet, deposit[0], deposit[1])]
+    if map.planet == bc.Planet.Earth:
+        Globals.farKarb = farKarbDests
+    else:
+        Globals.farKarbMars = farKarbDests
     return doKarbBFS(karbDests, map)
 
 
 def doKarbBFS(karbDests, map):
     paths = {}
+    if map.planet == bc.Planet.Earth:
+        cache = Globals.radar.earth_karbonite_locations
+    else:
+        cache = Globals.radar.mars_karbonite_locations
     for area in karbDests:
         toGet = karbDests[area]
         paths_in_quad = {}
         for i in range(len(toGet)):
-            if Globals.radar.earth_karbonite_locations[(toGet[i].x, toGet[i].y)] != 0:
+            if cache[(toGet[i].x, toGet[i].y)] != 0:
                 karbonite = toGet[i]
                 frontier = [karbonite]
                 parents = {(karbonite.x, karbonite.y): None}
@@ -95,6 +106,9 @@ def exploreKarbFrontier(frontier, map, parent, quadrant):
 
 
 def get_paths_to_karb(map):
-    quads = initial_quadrants(map)
+    if map.planet == bc.Planet.Mars:
+        quads = {0, 1, 2, 3}
+    else:
+        quads = initial_quadrants(map)
     paths = karbBFS(map, quads)
     return paths

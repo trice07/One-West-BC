@@ -22,7 +22,6 @@ def manage_rockets(gc, unit):
             units_inside = len(unit.structure_garrison())
             Globals.rockets_waiting[unit.id]["inside"] = units_inside
             total = Globals.rockets_waiting[unit.id]["total"]
-            print(total)
             units_left = total-units_inside
             launch = False
             if units_left <= Globals.ROCKET_ERROR:
@@ -32,7 +31,6 @@ def manage_rockets(gc, unit):
             if units_left == 0 or Globals.rockets_waiting[unit.id]["turns_til_launch"] == 0 or unit.health < Globals.ROCKET_HEALTH_MIN or launch:
                 destination = find_landing(gc, unit)
                 if destination is not None:
-                    print("LAUNCHING")
                     gc.launch_rocket(unit.id, destination)
                     del Globals.rockets_queue[Globals.radar.get_coordinates(unit.location)]
     else:
@@ -139,7 +137,6 @@ def call_units_to_rocket(gc, rocket):
             loc_key = Globals.radar.get_coordinates(start)
             count = 0
             for a in astro_found:
-                print(a.unit_type)
                 if loc_key in q:
                     q[loc_key][a.id] = parents
                 else:

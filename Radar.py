@@ -394,14 +394,14 @@ class Radar:
             # center_x = self.enemy_earth_x_sum
             # center_y = self.enemy_earth_y_sum
             count = len(self.earth_enemy_locations)
-            if len(cache) == 0:
+            if count == 0:
                 return bc.MapLocation(bc.Planet.Earth, Globals.earth_width//2, Globals.earth_height//2)
         elif planet == bc.Planet.Mars:
             cache = self.mars_enemy_locations
             # center_x = self.enemy_mars_x_sum
             # center_y = self.enemy_mars_y_sum
             count = len(self.mars_enemy_locations)
-            if len(cache) == 0:
+            if count == 0:
                 return bc.MapLocation(bc.Planet.Mars, Globals.mars_width//2, Globals.mars_height//2)
         else:
             return None

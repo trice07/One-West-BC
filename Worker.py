@@ -1,7 +1,7 @@
 import battlecode as bc
 import random
 import Globals
-import WorkerMovement
+import MapStrat
 import Navigation
 
 directions = list(bc.Direction) # Stores all directions as a list
@@ -21,6 +21,7 @@ def manage_worker(gc, unit):
 
         if Globals.everyone_to_mars:
             if len(br) != 0:
+                print("KARBONITE LEFT")
                 gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
                 broadcast_building_factory(gc, loc.add(br[0]))
                 return
@@ -40,6 +41,7 @@ def manage_worker(gc, unit):
 
         if gc.round() > 250:
             if len(br) != 0:
+                print("KARBONITE LEFT", gc.karbonite())
                 gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
                 broadcast_building_factory(gc, loc.add(br[0]))
                 return
@@ -88,8 +90,23 @@ def manage_worker(gc, unit):
             return
 
         if gc.is_move_ready(unit.id):
-            karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
-            Navigation.Bug(gc, unit, karb)
+            paths = Globals.pathsToKarbMars
+            for f in paths:
+                if unit.id in paths[f] and gc.is_move_ready(unit.id):
+                    if Navigation.path_with_bfs(gc, unit, paths[f][unit.id]):
+                    # print("Going towards factory", unit.id)
+                        return
+            loc = Globals.radar.get_coordinates(loc)
+            quad = MapStrat.get_quadrant(gc.starting_map(bc.Planet.Mars), loc)
+            if loc in Globals.mars_initial_karb[quad]:
+                if Navigation.path_with_bfs(gc, unit, Globals.mars_initial_karb[quad][loc]):
+                    # print("Going towards factory", unit.id)
+                        return
+
+            for i in directions:
+                if gc.can_move(unit.id, i):
+                    gc.move_robot(unit.id, i)
+                    return
 
 
 # def declot(gc, unit, count, width, height, desloc):
@@ -152,8 +169,8 @@ def broadcast_building_factory(gc, factory_location):
         get_closest_workers(gc, factory_location)
 
 
-def get_closest_workers(gc, start):
-    map = gc.starting_map(bc.Planet.Earth)
+def get_closest_workers(gc, start, cache=Globals.workers_factory_duty):
+    map = gc.starting_map(start.planet)
     d = bc.Direction.North
     for i in range(8):
         loc = start.add(d)
@@ -176,10 +193,10 @@ def get_closest_workers(gc, start):
                 count += 1
             loc_key = Globals.radar.get_coordinates(start)
             for i in range(len(w_found)):
-                if loc_key in Globals.workers_factory_duty:
-                    Globals.workers_factory_duty[loc_key][w_found[i].id] = parents
+                if loc_key in cache:
+                    cache[loc_key][w_found[i].id] = parents
                 else:
-                    Globals.workers_factory_duty[loc_key] = {w_found[i].id: parents}
+                    cache[loc_key] = {w_found[i].id: parents}
                 if i == 2:
                     break
 

@@ -200,12 +200,14 @@ def reflectPoint(location):
 def BFS(map, start, gc):
     # print("computing BFS", timeit.timeit())
     d = bc.Direction.North
+    loc = start
     for i in range(8):
-        loc = start.add(d)
         if map.on_map(loc):
             if map.is_passable_terrain_at(start):
                 break
-        start = start.add(d)
+        loc = start.add(d)
+        d = d.rotate_right()
+
     if map.on_map(start):
         if map.is_passable_terrain_at(start):
             frontier = [start]
@@ -275,16 +277,20 @@ def exploreFrontier(frontier, map, parent, gc):
 def path_with_bfs(gc, unit, path):
     #also too slow
     if unit.location.is_in_garrison() or not unit.location.is_on_map():
-        return
+        return False
     else:
         selfloc = unit.location.map_location()
         # planet = selfloc.planet
         # direction = selfloc.direction_to(Globals.radar.get_enemy_center(selfloc.planet))
         if unit.unit_type == bc.UnitType.Worker:
-            move_on_path(gc, unit, selfloc, path)
-            return
+            if move_on_path(gc, unit, selfloc, path):
+                return True
         if move_on_path(gc, unit, selfloc, path):
-            return
+            return True
+        else:
+           if move_on_path(gc, unit, selfloc, Globals.pathToEnemy):
+               return True
+    return False
 
             # if not get_back_on_path(gc, unit):
             #     print("can't get on path")
@@ -375,22 +381,35 @@ def get_back_on_path(gc, unit):
 
 def karbpath(gc, unit, loc):
     quad = MapStrat.get_quadrant(gc.starting_map(loc.planet), (loc.x, loc.y))
-    if quad in Globals.pathsToKarb:
-        area = Globals.pathsToKarb[quad]
+    if loc.planet == bc.Planet.Earth:
+        cache = Globals.pathsToKarb
+        farcache = Globals.pathsToFarKarb
+        farkarb = Globals.farKarb
     else:
-        if len(Globals.pathsToFarKarb) > 0:
-            area = Globals.pathsToFarKarb[quad]
+        cache = Globals.pathsToKarbMars
+        farcache = Globals.pathsToFarKarbMars
+        farkarb = Globals.farKarbMars
+    if quad in Globals.pathsToKarb:
+        area = cache[quad]
+    else:
+        if len(farcache) > 0:
+            area = farcache[quad]
         else:
-            Globals.pathsToFarKarb = MapStrat.doKarbBFS(Globals.farKarb, gc.starting_map(bc.Planet.Earth))
+            Globals.pathsToFarKarb = MapStrat.doKarbBFS(farkarb, gc.starting_map(bc.Planet.Earth))
             area = Globals.pathsToFarKarb[quad]
     for path in area:
         try:
             goTo = area[path][(loc.x, loc.y)]
+
             if goTo:
-                move = loc.direction_to(goTo)
-                if try_to_move(gc, unit, move):
-                    # print("THinks its moving")
-                    return True
+                if gc.can_sense_location(goTo):
+                    if gc.karbonite_at(goTo) > 0:
+                        move = loc.direction_to(goTo)
+                        if try_to_move(gc, unit, move):
+                            # print("THinks its moving")
+                            return True
+                    else:
+                        continue
         except KeyError:
             continue
     return False

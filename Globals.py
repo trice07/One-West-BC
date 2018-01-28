@@ -24,8 +24,12 @@ pathToEnemyMars = {}
 updatePath = {}
 updatePathMars = {}
 pathsToKarb ={}
+pathsToKarbMars ={}
 pathsToFarKarb = {}
+pathsToFarKarbMars = {}
+mars_initial_karb = {}
 farKarb = []
+farKarbMars = []
 
 REPLICATE_UNTIL = 7
 PRODUCE_HEALER_CONSTANT = -30

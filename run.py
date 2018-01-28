@@ -31,6 +31,7 @@ Globals.radar = Radar(gc.starting_map(bc.Planet.Earth), gc.starting_map(bc.Plane
 Globals.earth_enemy_center = Globals.radar.get_enemy_center(bc.Planet.Earth)  # The center of starting enemy units on Earth
 Globals.asteroid_pattern = gc.asteroid_pattern()
 Globals.pathsToKarb = MapStrat.get_paths_to_karb(earth_map)
+Globals.mars_initial_karb = MapStrat.get_paths_to_karb(mars_map)
 Globals.pathToEnemy = Navigation.BFS(earth_map, Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
 Globals.pathToEnemyMars = Navigation.BFS(mars_map, Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
 Globals.INITIAL_DISTANCE = MapStrat.initial_distance()
@@ -60,6 +61,8 @@ while True:
             asteroid = Globals.asteroid_pattern.asteroid(round)
         if asteroid is not None:
             Globals.radar.update_karb_amount(gc, asteroid.location, asteroid.karbonite)
+            if Globals.radar.our_num_mars_workers > 0:
+                Worker.get_closest_workers(gc, asteroid.location, Globals.pathsToKarbMars)
         for unit in gc.my_units():
             Globals.radar.update_location(unit)
             if Units.try_go_to_rocket(gc, unit):
@@ -67,7 +70,6 @@ while True:
             if unit.location.is_on_map():
                 if Globals.radar.check_if_enemies_gone(gc, unit):
                     Globals.everyone_to_mars = True
-                    print("GET THE FUCK TO MARS!")
                 if unit.location.map_location().planet == bc.Planet.Mars and Globals.on_mars is False:
                     Globals.on_mars = True
                     Navigation.BFS(gc.starting_map(bc.Planet.Mars), Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
