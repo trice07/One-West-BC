@@ -11,7 +11,7 @@ class Radar:
         :param mars: PlanetMap
         """
         self.earth_map = {}
-        self.earth_karbonite_locations = []
+        self.earth_karbonite_locations = {}
         self.our_earth_locations = {}
         self.earth_enemy_locations = {}
         self.being_shot_at_earth = []
@@ -19,7 +19,7 @@ class Radar:
         self.enemy_earth_y_sum = 0
 
         self.mars_map = {}
-        self.mars_karbonite_locations = []
+        self.mars_karbonite_locations = {}
         self.our_mars_locations = {}
         self.mars_enemy_locations = {}
         self.being_shot_at_mars = []
@@ -65,7 +65,7 @@ class Radar:
                 ml = bc.MapLocation(earth.planet, i, j)
                 to_add = Radar.get_init_type(ml, earth)
                 if to_add["karb"] != 0:
-                    self.earth_karbonite_locations.append(ml)
+                    self.earth_karbonite_locations[(ml.x, ml.y)] = to_add["karb"]
                 coords = Radar.get_coordinates(ml)
                 self.earth_map[coords] = to_add
 
@@ -86,7 +86,7 @@ class Radar:
                 ml = bc.MapLocation(mars.planet, i, j)
                 to_add = Radar.get_init_type(ml, mars)
                 if to_add["karb"] != 0:
-                    self.mars_karbonite_locations.append(ml)
+                    self.mars_karbonite_locations[(ml.x, ml.y)] = to_add["karb"]
                 coords = Radar.get_coordinates(ml)
                 self.mars_map[coords] = to_add
 
@@ -347,19 +347,19 @@ class Radar:
             print("Planet type not specified, make sure planet is a Planet object.")
             return
 
-    def update_karb_amount(self, gc, location):
+    def update_karb_amount(self, location, gc):
         amount = gc.karbonite_at(location)
         coords = self.get_coordinates(location)
         if location.planet == bc.Planet.Earth:
             self.earth_map[coords]["karb"] = amount
             if amount == 0:
-                self.earth_karbonite_locations.remove(location)
+                self.earth_karbonite_locations[(location.x, location.y)] = 0
         elif location.planet == bc.Planet.Mars:
             self.mars_map[coords]["karb"] = amount
             if amount == 0:
-                self.mars_karbonite_locations.remove(location)
-            elif location not in self.mars_karbonite_locations:
-                self.mars_karbonite_locations.append(location)
+                self.mars_karbonite_locations[(location.x, location.y)] = 0
+            elif (location.x, location.y) not in self.mars_karbonite_locations:
+                self.mars_karbonite_locations[(location.x, location.y)] = amount
 
     def get_enemy_center(self, planet):
         """

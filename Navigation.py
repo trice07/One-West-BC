@@ -2,7 +2,7 @@ import battlecode as bc
 import sys
 import math
 import Globals
-import timeit
+import MapStrat
 
 
 def Bug(gc, unit, destination, defense=False):
@@ -214,7 +214,7 @@ def BFS(map, start, gc):
             while frontier:
                 #print(explored)
                 #debug(frontier)
-                frontier = exploreFrontier(frontier, map, parents, gc)
+                frontier, parents = exploreFrontier(frontier, map, parents, gc)
             return parents
 
 
@@ -230,7 +230,7 @@ def exploreFrontier(frontier, map, parent, gc):
                     if not gc.has_unit_at_location(newLocation):
                         parent[(newLocation.x, newLocation.y)] = f
                         newFrontier.append(newLocation)
-    return newFrontier
+    return newFrontier, parent
 
 
 
@@ -296,7 +296,6 @@ def path_with_bfs(gc, unit, path):
             #     gc.move_robot(unit.id, direction.rotate_left())
             # elif gc.can_move(unit.id, direction.rotate_right()):
             #     gc.move_robot(unit.id, direction.rotate_right())
-
 
 def move_on_path(gc, unit, loc, path):
     d = loc.direction_to(Globals.radar.get_enemy_center(loc.planet))
@@ -368,44 +367,32 @@ def get_back_on_path(gc, unit):
 #         Globals.paths_to_disperse_mars[unit.id] = paths
 
 
-def findQuadrants(planetmap):
-    width = planetmap.width
-    height = planetmap.height
-    xquart = math.floor(width / 4)
-    yquart = math.floor(height / 4)
-    quadrantCenters = [(xquart, yquart), (width - xquart, yquart), (xquart, height - yquart), (width - xquart, height - yquart)]
-    quadrantCenters = [bc.MapLocation(planetmap.planet, quadrantCenters[i][0], quadrantCenters[i][1]) for i in range(4)]
-    return quadrantCenters
 
-
-def BFSKarb(map, gc):
-    carbs = Globals.radar.earth_karbonite_locations
-    for x in carbs:
-        Globals.pathsToKarb[(x.x, x.y)]= (BFS(map, x, gc))
+# def BFSKarb(map, gc):
+#     carbs = Globals.radar.earth_karbonite_locations
+#     for x in carbs:
+#         Globals.pathsToKarb[(x.x, x.y)]= (BFS(map, x, gc))
 
 
 def karbpath(gc, unit, loc):
-    toRemove = []
-    for path in Globals.pathsToKarb:
-        karb = bc.MapLocation(loc.planet, path[0], path[1])
-        if gc.can_sense_location(karb):
-            if gc.karbonite_at(karb) == 0:
-                toRemove.append(path)
-                continue
-        # print(path)
-        if Globals.pathsToKarb[path]:
-            try:
-                move = Globals.pathsToKarb[path][(loc.x, loc.y)]
-                if move:
-                    d = loc.direction_to(move)
-                    try_to_move(gc, unit, d)
-                    return
-            except KeyError:
-                continue
+    quad = MapStrat.get_quadrant(gc.starting_map(loc.planet), (loc.x, loc.y))
+    if quad in Globals.pathsToKarb:
+        area = Globals.pathsToKarb[quad]
+    else:
+        if len(Globals.pathsToFarKarb) > 0:
+            area = Globals.pathsToFarKarb[quad]
         else:
+            Globals.pathsToFarKarb = MapStrat.doKarbBFS(Globals.farKarb, gc.starting_map(bc.Planet.Earth))
+            area = Globals.pathsToFarKarb[quad]
+    for path in area:
+        try:
+            goTo = area[path][(loc.x, loc.y)]
+            if goTo:
+                move = loc.direction_to(goTo)
+                if try_to_move(gc, unit, move):
+                    return
+        except KeyError:
             continue
-    for spent in toRemove:
-        del Globals.pathsToKarb[spent]
 
 
 

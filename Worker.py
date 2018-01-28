@@ -17,7 +17,7 @@ def manage_worker(gc, unit):
     loc = unit.location.map_location()
     factory_duty = Globals.workers_factory_duty
     h, bf, br, r, blue, fix = findViableDirection(gc, unit)
-    print(Globals.income)
+    # print(Globals.income)
     if loc.planet == bc.Planet.Earth:
         # width = Globals.earth_width
         # height = Globals.earth_height
@@ -54,12 +54,13 @@ def manage_worker(gc, unit):
 
         if len(h) > 0:
             gc.harvest(unit.id, h[0])
-            Globals.radar.update_karb_amount(gc, loc.add(h[0]))
+            Globals.radar.update_karb_amount(loc.add(h[0]), gc)
             return
 
         if gc.is_move_ready(unit.id):
-            karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
-            Navigation.Bug(gc, unit, karb)
+            # karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
+            # Navigation.Bug(gc, unit, karb)
+            Navigation.karbpath(gc, unit, loc)
 
 
         # nearby = gc.sense_nearby_units(loc, 2)
@@ -129,13 +130,13 @@ def manage_worker(gc, unit):
         if len(h) > 0:
             print("harvesting karb")
             gc.harvest(unit.id, h[0])
-            Globals.radar.update_karb_amount(gc, loc.add(h[0]))
+            Globals.radar.update_karb_amount(loc.add(h[0]), gc)
             return
 
-        if gc.is_move_ready(unit.id):
-            print("moving towards karb")
-            karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
-            Navigation.Bug(gc, unit, karb)
+        # if gc.is_move_ready(unit.id):
+        #     print("moving towards karb")
+        #     karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
+        #     Navigation.Bug(gc, unit, karb)
 
 
 # def declot(gc, unit, count, width, height, desloc):

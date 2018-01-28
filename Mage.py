@@ -1,8 +1,9 @@
 import battlecode as bc
 import random
-import Units
+import Ranger
 import Globals
 import Navigation
+import Units
 
 directions=list(bc.Direction) #Stores all directions as a list
 random.seed(1) #Random seeding for testing. Will be removed
@@ -20,20 +21,22 @@ def manage_mages(gc, unit):
     if isinstance(enemies, bc.Unit):
         return
     else:
-        if Units.try_to_retreat(unit, enemies):
-            retreated = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(loc.planet))
-            if not retreated:
-                if gc.is_blink_ready(unit.id):
-                    go_blink(gc, unit, loc)
-                else:
-                    if gc.is_move_ready(unit.id):
-                        Navigation.path_with_bfs(gc, unit, path)
+        if Ranger.ranger_retreat(unit):
+            if gc.is_move_ready(unit.id):
+                retreated = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(loc.planet))
+                if not retreated:
+                    if gc.is_blink_ready(unit.id):
+                        go_blink(gc, unit, loc)
+                    else:
+                        if gc.is_move_ready(unit.id):
+                            Navigation.path_with_bfs(gc, unit, path)
         else:
             if gc.is_blink_ready(unit.id):
                 go_blink(gc, unit, loc)
             else:
                 if gc.is_move_ready(unit.id):
                     Navigation.path_with_bfs(gc, unit, path)
+
 
 def go_blink(gc, unit, loc):
     enemycenter = Globals.radar.get_enemy_center(loc.planet)
