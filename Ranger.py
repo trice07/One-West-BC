@@ -14,16 +14,28 @@ def turn(gc, unit):
     result = Units.shoot_at_best_target(gc, unit)
     if isinstance(result, bc.Unit):
         return
+    elif isinstance(result, bc.VecUnit):
+        nearby_enemies = result
+    else:
+        nearby_enemies = send_radar_info(unit, gc)
     if gc.is_move_ready(unit.id):
-        if ranger_retreat(unit):
+        e, should_retreat = ranger_retreat(unit, nearby_enemies)
+        if should_retreat:
             moved = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(unit.location.map_location().planet))
             if moved:
                 return
-        planet = unit.location.map_location().planet
-        path = Globals.updatePath if planet == bc.Planet.Earth else Globals.updatePathMars
-        Navigation.path_with_bfs(gc, unit, path)
+        if gc.is_attack_ready(unit.id):
+            planet = unit.location.map_location().planet
+            path = Globals.updatePath if planet == bc.Planet.Earth else Globals.updatePathMars
+            Navigation.path_with_bfs(gc, unit, path)
     return
 
 
-def ranger_retreat(unit):
-    return unit.health <= (unit.max_health/8)
+def ranger_retreat(unit, dangerous_enemies):
+    if unit.health > (unit.max_health/10):
+        return None, False
+    violent_enemies = [bc.UnitType.Ranger, bc.UnitType.Mage, bc.UnitType.Knight]
+    for e in dangerous_enemies:
+        if e.unit_type in violent_enemies and e.location.is_within_range(e.attack_range(), unit.location):
+            return e, True
+    return None, False

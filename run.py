@@ -9,6 +9,8 @@ import Ranger
 import Research
 import Rocket
 import Worker
+import Mage
+import Knight
 from Radar import Radar
 import Navigation
 import time
@@ -31,6 +33,7 @@ Globals.asteroid_pattern = gc.asteroid_pattern()
 Globals.pathsToKarb = MapStrat.get_paths_to_karb(earth_map)
 Globals.pathToEnemy = Navigation.BFS(earth_map, Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
 Globals.pathToEnemyMars = Navigation.BFS(mars_map, Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
+Globals.INITIAL_DISTANCE = MapStrat.initial_distance()
 while True:
     # Start of Turn Updates #
     
@@ -40,31 +43,34 @@ while True:
     try:
         # Globals.radar.update_mars_karb(gc)
         # Unit Controls #
-        if gc.round() % 10 == 0:
+        round = gc.round()
+        if round % 10 == 0:
             if Globals.radar.our_num_mars_rockets > 0:
                 Globals.updatePathMars = Navigation.BFS(mars_map, Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
             if Globals.radar.our_num_earth_rangers > 0:
                 Globals.updatePath = Navigation.BFS(earth_map, Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
             # print(Globals.pathToEnemy)
         asteroid = None
-        if (gc.round() > 250 and Globals.radar.our_num_earth_rockets < 1) or gc.round() > 600:
+        if (round > 250 and Globals.radar.our_num_earth_rockets < 1) or round > 600:
             Globals.factory_hold = True
         else:
             Globals.factory_hold = False
 
-        if Globals.asteroid_pattern.has_asteroid(gc.round()):
-            asteroid = Globals.asteroid_pattern.asteroid(gc.round())
+        if Globals.asteroid_pattern.has_asteroid(round):
+            asteroid = Globals.asteroid_pattern.asteroid(round)
         if asteroid is not None:
             Globals.radar.update_karb_amount(gc, asteroid.location, asteroid.karbonite)
         for unit in gc.my_units():
+            Globals.radar.update_location(unit)
             if Units.try_go_to_rocket(gc, unit):
                 continue
             if unit.location.is_on_map():
+                if Globals.radar.check_if_enemies_gone(gc, unit):
+                    Globals.everyone_to_mars = True
+                    print("GET THE FUCK TO MARS!")
                 if unit.location.map_location().planet == bc.Planet.Mars and Globals.on_mars is False:
                     Globals.on_mars = True
                     Navigation.BFS(gc.starting_map(bc.Planet.Mars), Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
-            Globals.radar.update_location(unit)
-            if unit.location.is_on_map():
                 if unit.unit_type == bc.UnitType.Worker:
                     s = time.time()
                     Worker.manage_worker(gc, unit)
@@ -74,10 +80,10 @@ while True:
                 elif unit.unit_type == bc.UnitType.Healer:
                     Healer.manage_healers(gc, unit)
                 elif unit.unit_type == bc.UnitType.Knight:
-                    pass
+                    Knight.turn(gc, unit)
                     # Knight.manage_knights(gc, unit, Globals.earth_enemy_center, earth_enemy_map, eneGlobals.us)
                 elif unit.unit_type == bc.UnitType.Mage:
-                    pass
+                    Mage.manage_mages(gc, unit)
                     # Mage.manage_mages(gc, unit, Globals.earth_enemy_center, earth_enemy_map, Globals.us)
                 elif unit.unit_type == bc.UnitType.Ranger:
                     s = time.time()
@@ -86,9 +92,14 @@ while True:
                 elif unit.unit_type == bc.UnitType.Factory:
                     Factory.factory_manager(gc, unit)
         print("Workers: ", Globals.wtime, "Rangers: ", Globals.rtime, "Find Karb: ", Globals.ftime)
-        Globals.radar.remove_dead_enemies()
-        Globals.income = gc.karbonite() - Globals.prev_karb_amount
-        Globals.prev_karb_amount = gc.karbonite()
+        Globals.radar.remove_dead_units()
+        Globals.radar.clear_being_shot_at_cache(bc.Planet.Earth)
+        Globals.radar.clear_being_shot_at_cache(bc.Planet.Mars)
+        Globals.radar.enemies_killed_this_turn = {}
+        Globals.radar.enemy_center = None
+        Globals.radar.enemy_center_found = -1
+        # Globals.income = gc.karbonite() - Globals.prev_karb_amount
+        # Globals.prev_karb_amount = gc.karbonite()
         print("----------------")
     # Allows us to locate errors in the code
     except Exception as e:
@@ -96,8 +107,6 @@ while True:
         traceback.print_exc()
 
     # Send the actions we have performed and wait for the next turn
-    Globals.radar.clear_being_shot_at_cache(bc.Planet.Earth)
-    Globals.radar.clear_being_shot_at_cache(bc.Planet.Mars)
     gc.next_turn()
 
     # Write all actions to the manager

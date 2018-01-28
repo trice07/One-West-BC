@@ -15,6 +15,9 @@ TURNS_TIL_LAUNCH = 5
 ROCKET_HEALTH_MIN = 50
 ROCKET_HEALTH_MIN_IF_ALMOST_FULL = 100
 on_mars = False
+everyone_to_mars = False
+factory_hold = False
+INITIAL_DISTANCE = 0
 
 pathToEnemy = {}
 pathToEnemyMars = {}

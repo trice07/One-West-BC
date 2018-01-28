@@ -5,10 +5,10 @@ import math
 
 def initial_distance():
     us = [Globals.radar.our_earth_locations[unit].location.map_location() for unit in Globals.radar.our_earth_locations]
-    enemies = [Globals.radar.enemy_earth_locations[unit].location.map_location() for unit in Globals.radar.enemy_earth_locations]
+    enemies = [Globals.radar.earth_enemy_locations[unit].location.map_location() for unit in Globals.radar.earth_enemy_locations]
     mindistance = 1000000000000
-    for unit in us:
-        for thing in enemies:
+    for unit in range(len(us)):
+        for thing in range(len(enemies)):
             dist = us[unit].distance_squared_to(enemies[thing])
             if dist < mindistance:
                 mindistance = dist

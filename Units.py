@@ -38,20 +38,31 @@ def get_best_target_earth(gc, unit):
     :param unit: Unit The player unit
     :return: Unit or None
     """
-    for enemy in Globals.radar.being_shot_at_earth:
-        if gc.can_attack(unit.id, enemy.id):
-            if enemy.health <= unit.damage():
-                Globals.radar.being_shot_at_earth.remove(enemy)
-                Globals.radar.delete_enemy_from_radar(enemy)
-            return enemy
+    for enemy_id in Globals.radar.being_shot_at_earth:
+        if gc.can_attack(unit.id, enemy_id):
+            health = Globals.radar.being_shot_at_earth[enemy_id]
+            if health <= unit.damage():
+                del Globals.radar.being_shot_at_earth[enemy_id]
+                Globals.radar.delete_enemy_from_radar(gc.unit(enemy_id))
+            else:
+                Globals.radar.being_shot_at_earth[enemy_id] -= unit.damage()
+            return gc.unit(enemy_id)
     target_list = Globals.radar.update_radar(gc, unit)
+    best = None
     for target in target_list:
         if gc.can_attack(unit.id, target.id):
-            if target.health <= unit.damage():
-                Globals.radar.delete_enemy_from_radar(target)
+            if target.unit_type != bc.UnitType.Worker:
+                best = target
+                break
             else:
-                Globals.radar.being_shot_at_earth.append(target)
-            return target
+                best = target
+
+    if best is not None:
+        if best.health <= unit.damage():
+            Globals.radar.delete_enemy_from_radar(best)
+        else:
+            Globals.radar.being_shot_at_earth[best.id] = (best.health - unit.damage())
+        return best
     return target_list
 
 
@@ -62,15 +73,22 @@ def get_best_target_mars(gc, unit):
     :param unit: Unit The player unit
     :return: Unit or None
     """
-    for enemy in Globals.radar.being_shot_at_mars:
-        if gc.can_attack(unit.id, enemy.id):
-            if enemy.health <= unit.damage():
-                Globals.radar.being_shot_at_mars.remove(enemy)
-                del Globals.radar.mars_enemy_locations[enemy.id]
-            return enemy
+    for enemy_id in Globals.radar.being_shot_at_mars:
+        if gc.can_attack(unit.id, enemy_id):
+            health = Globals.radar.being_shot_at_mars[enemy_id]
+            if health <= unit.damage():
+                del Globals.radar.being_shot_at_mars[enemy_id]
+                Globals.radar.delete_enemy_from_radar(gc.unit(enemy_id))
+            else:
+                Globals.radar.being_shot_at_mars[enemy_id] -= unit.damage()
+            return gc.unit(enemy_id)
     target_list = Globals.radar.update_radar(gc, unit)
     for target in target_list:
         if gc.can_attack(unit.id, target.id):
+            if target.health <= unit.damage():
+                Globals.radar.delete_enemy_from_radar(target)
+            else:
+                Globals.radar.being_shot_at_mars[target.id] = target.health - unit.damage()
             return target
     return target_list
 
@@ -82,7 +100,6 @@ def try_go_to_rocket(gc, unit):
         if unit.id in Globals.rockets_queue[f]:
             if gc.is_move_ready(unit.id):
                 x = Navigation.path_with_bfs(gc, unit, Globals.rockets_queue[f][unit.id])
-                print("going to rocket", x)
                 return True
 
 

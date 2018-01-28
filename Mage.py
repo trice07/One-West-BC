@@ -21,7 +21,7 @@ def manage_mages(gc, unit):
     if isinstance(enemies, bc.Unit):
         return
     else:
-        if Ranger.ranger_retreat(unit):
+        if Ranger.ranger_retreat(unit, enemies):
             if gc.is_move_ready(unit.id):
                 retreated = Navigation.retreatFromKnownEnemy(gc, unit, Globals.radar.get_enemy_center(loc.planet))
                 if not retreated:

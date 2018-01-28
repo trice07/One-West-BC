@@ -18,10 +18,11 @@ def manage_rockets(gc, unit):
             for astronaut in gc.sense_nearby_units_by_team(location.map_location(), 2, Globals.us):
                 if gc.can_load(unit.id, astronaut.id):
                     gc.load(unit.id, astronaut.id)
+                    Globals.radar.update_unit_counts_earth(astronaut, "-")
             units_inside = len(unit.structure_garrison())
-            print("UNITS INSIDE", units_inside)
             Globals.rockets_waiting[unit.id]["inside"] = units_inside
             total = Globals.rockets_waiting[unit.id]["total"]
+            print(total)
             units_left = total-units_inside
             launch = False
             if units_left <= Globals.ROCKET_ERROR:
@@ -47,9 +48,12 @@ def manage_rockets(gc, unit):
 def find_landing(gc, unit):
     """
     """
-    mars_map = Globals.radar.mars_map
-    for l in mars_map:
-        ml = bc.MapLocation(bc.Planet.Mars, l[0], l[1])
+    ml = Globals.radar.get_enemy_center(bc.Planet.Mars)
+    if ml not in Globals.rocket_landings and gc.can_launch_rocket(unit.id, ml):
+        Globals.rocket_landings.append(ml)
+        return ml
+    random.shuffle(Globals.radar.poss_landing_locations)
+    for ml in Globals.radar.poss_landing_locations:
         if ml not in Globals.rocket_landings and gc.can_launch_rocket(unit.id, ml):
             Globals.rocket_landings.append(ml)
             return ml
@@ -143,7 +147,7 @@ def call_units_to_rocket(gc, rocket):
                 if count == 7:
                     break
                 count += 1
-            Globals.rockets_waiting[rocket.id] = {"total": len(astro_found),
+            Globals.rockets_waiting[rocket.id] = {"total": count + 1,
                                                   "inside": 0,
                                                   "turns_til_launch": Globals.TURNS_TIL_LAUNCH,
                                                   "units_ready": set()}

@@ -1,5 +1,4 @@
 import battlecode as bc
-
 import Globals
 
 
@@ -14,7 +13,7 @@ class Radar:
         self.earth_karbonite_locations = {}
         self.our_earth_locations = {}
         self.earth_enemy_locations = {}
-        self.being_shot_at_earth = []
+        self.being_shot_at_earth = {}
         self.enemy_earth_x_sum = 0
         self.enemy_earth_y_sum = 0
 
@@ -22,9 +21,10 @@ class Radar:
         self.mars_karbonite_locations = {}
         self.our_mars_locations = {}
         self.mars_enemy_locations = {}
-        self.being_shot_at_mars = []
+        self.being_shot_at_mars = {}
         self.enemy_mars_x_sum = 0
         self.enemy_mars_y_sum = 0
+        self.poss_landing_locations = []
 
         self.our_num_earth_workers = 0
         self.our_num_earth_knights = 0
@@ -56,8 +56,10 @@ class Radar:
 
         self.current_units = {}
         self.previous_units = {}
+        self.enemies_killed_this_turn = {}
 
-        self.units_going_to_rocket = {}
+        self.enemy_center_found = -1
+        self.enemy_center = None
 
         # Initialize Earth Map
         for i in range(earth.width):
@@ -85,6 +87,8 @@ class Radar:
             for j in range(mars.height):
                 ml = bc.MapLocation(mars.planet, i, j)
                 to_add = Radar.get_init_type(ml, mars)
+                if to_add["passable"]:
+                    self.poss_landing_locations.append(ml)
                 if to_add["karb"] != 0:
                     self.mars_karbonite_locations[(ml.x, ml.y)] = to_add["karb"]
                 coords = Radar.get_coordinates(ml)
@@ -230,10 +234,10 @@ class Radar:
                 elif t == bc.UnitType.Healer:
                     self.our_num_earth_healers -= 1
 
-    def update_radar(self, gc, unit, range=None):
-        if range is None:
-            range = unit.vision_range
-        vecunit = gc.sense_nearby_units_by_team(unit.location.map_location(), range, Globals.them)
+    def update_radar(self, gc, unit, r=None):
+        if r is None:
+            r = unit.vision_range
+        vecunit = gc.sense_nearby_units_by_team(unit.location.map_location(), r, Globals.them)
         for enemy in vecunit:
             self.update_enemy_cache(enemy)
         return vecunit
@@ -257,7 +261,7 @@ class Radar:
         if unit.id in self.previous_units:
             del self.previous_units[unit.id]
 
-    def remove_dead_enemies(self):
+    def remove_dead_units(self):
         for unit_id in self.previous_units:
             unit = self.previous_units[unit_id]
             if unit.location.is_on_planet(bc.Planet.Earth):
@@ -287,22 +291,21 @@ class Radar:
                 self.update_unit_counts_earth(enemy, "+")
             else:
                 self.update_unit_counts_mars(enemy, "+")
-        else:
-            x, y = self.get_coordinates(cache[enemy.id].location)
-            newx, newy = self.get_coordinates(enemy.location)
-            x_sum -= x
-            y_sum -= y
-            x_sum += newx
-            y_sum += newy
+        # else:
+        #     x, y = self.get_coordinates(cache[enemy.id].location)
+        #     newx, newy = self.get_coordinates(enemy.location)
+        #     x_sum -= x
+        #     y_sum -= y
+        #     x_sum += newx
+        #     y_sum += newy
         cache[enemy.id] = enemy
 
     def clear_being_shot_at_cache(self, planet):
         if planet == bc.Planet.Earth:
-            self.being_shot_at_earth = []
+            self.being_shot_at_earth = {}
         elif planet == bc.Planet.Mars:
-            self.being_shot_at_mars = []
+            self.being_shot_at_mars = {}
         return
-
 
     @staticmethod
     def get_init_type(ml, planet):
@@ -385,33 +388,48 @@ class Radar:
         There is no guarantee that the point will be on the map and this must
         be checked. If there are no units on the planet, the center is at (0, 0)
         """
+
         if planet == bc.Planet.Earth:
             cache = self.earth_enemy_locations
-            center_x = self.enemy_earth_x_sum
-            center_y = self.enemy_earth_y_sum
+            # center_x = self.enemy_earth_x_sum
+            # center_y = self.enemy_earth_y_sum
             count = len(self.earth_enemy_locations)
             if len(cache) == 0:
                 return bc.MapLocation(bc.Planet.Earth, Globals.earth_width//2, Globals.earth_height//2)
         elif planet == bc.Planet.Mars:
             cache = self.mars_enemy_locations
-            center_x = self.enemy_mars_x_sum
-            center_y = self.enemy_mars_y_sum
+            # center_x = self.enemy_mars_x_sum
+            # center_y = self.enemy_mars_y_sum
             count = len(self.mars_enemy_locations)
             if len(cache) == 0:
                 return bc.MapLocation(bc.Planet.Mars, Globals.mars_width//2, Globals.mars_height//2)
         else:
             return None
-        return bc.MapLocation(planet, center_x//count, center_y//count)
+        if len(cache) == self.enemy_center_found:
+            return self.enemy_center
+        center_x = 0
+        center_y = 0
+        for e in cache:
+            center_x += cache[e].location.map_location().x
+            center_y += cache[e].location.map_location().y
+        ec = bc.MapLocation(planet, center_x//count, center_y//count)
+        self.enemy_center = ec
+        self.enemy_center_found = len(cache)
+        return ec
 
     def delete_enemy_from_radar(self, enemy):
-        del Globals.radar.earth_enemy_locations[enemy.id]
         if enemy.location.is_on_planet(bc.Planet.Earth):
             self.update_unit_counts_earth(enemy, "-")
+            del self.earth_enemy_locations[enemy.id]
         elif enemy.location.is_on_planet(bc.Planet.Mars):
             self.update_unit_counts_mars(enemy, "-")
+            del self.mars_enemy_locations[enemy.id]
 
-    # def update_mars_karb(self, gc):
-    #
-    #     return
-
-
+    def check_if_enemies_gone(self, gc, unit):
+        if gc.round() > 250:
+            ml = unit.location.map_location()
+            if ml == self.get_enemy_center(ml.planet) and len(self.earth_enemy_locations) == 0:
+                return True
+            elif len(self.mars_enemy_locations) == 0:
+                return True
+        return False

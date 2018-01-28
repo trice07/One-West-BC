@@ -146,7 +146,7 @@ def retreatFromKnownEnemy(gc, unit, enemyLocation):
         currentDistance = unitLocation.distance_squared_to(enemyLocation)
         for i in range(8):
             retreatDirection = retreatDirection.rotate_right()
-            if unitLocation.add(retreatDirection).distance_squared_to(enemyLocation) > currentDistance:
+            if unitLocation.add(retreatDirection).distance_squared_to(enemyLocation) >= currentDistance:
                 if gc.can_move(unit.id, retreatDirection):
                     gc.move_robot(unit.id, retreatDirection)
                     return True
@@ -216,6 +216,7 @@ def BFS(map, start, gc):
                 #debug(frontier)
                 frontier, parents = exploreFrontier(frontier, map, parents, gc)
             return parents
+    print("somehow getting here")
 
 
 def exploreFrontier(frontier, map, parent, gc):
@@ -294,6 +295,7 @@ def path_with_bfs(gc, unit, path):
             # elif gc.can_move(unit.id, direction.rotate_right()):
             #     gc.move_robot(unit.id, direction.rotate_right())
 
+
 def move_on_path(gc, unit, loc, path):
     d = loc.direction_to(Globals.radar.get_enemy_center(loc.planet))
     try:
@@ -305,7 +307,7 @@ def move_on_path(gc, unit, loc, path):
             else:
                 return False
 
-    except KeyError:
+    except:
         if try_to_move(gc, unit, d):
             return True
         return False
@@ -388,9 +390,10 @@ def karbpath(gc, unit, loc):
                 move = loc.direction_to(goTo)
                 if try_to_move(gc, unit, move):
                     # print("THinks its moving")
-                    return
+                    return True
         except KeyError:
             continue
+    return False
     # print("END OF FUNCTION ")
 
 
