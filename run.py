@@ -30,7 +30,7 @@ Research.fill_research_queue(gc)  # Fills the research queue
 Globals.radar = Radar(gc.starting_map(bc.Planet.Earth), gc.starting_map(bc.Planet.Mars))
 Globals.earth_enemy_center = Globals.radar.get_enemy_center(bc.Planet.Earth)  # The center of starting enemy units on Earth
 Globals.asteroid_pattern = gc.asteroid_pattern()
-Globals.pathsToKarb = MapStrat.get_paths_to_karb(earth_map)
+# Globals.pathsToKarb = MapStrat.get_paths_to_karb(earth_map)
 Globals.mars_initial_karb = MapStrat.get_paths_to_karb(mars_map)
 Globals.pathToEnemy = Navigation.BFS(earth_map, Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
 Globals.pathToEnemyMars = Navigation.BFS(mars_map, Globals.radar.get_enemy_center(bc.Planet.Mars), gc)

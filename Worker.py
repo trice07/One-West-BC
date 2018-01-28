@@ -68,7 +68,7 @@ def manage_worker(gc, unit):
 
         if gc.is_move_ready(unit.id):
             # print("goin to karb")
-            moved = Navigation.karbpath(gc, unit, loc)
+            moved = Navigation.goToKarb(gc.starting_map(loc.planet), unit, gc)
             if moved:
                 return
             else:

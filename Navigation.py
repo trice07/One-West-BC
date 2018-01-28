@@ -237,14 +237,14 @@ def exploreFrontier(frontier, map, parent, gc):
 
 
 
-# def reversePath(path, destination):
-#     end = (destination.x, destination.y)
-#     correctDirection = {}
-#     while path[end] is not None:
-#         correctDirection[(path[end].x, path[end].y)] = end
-#         end = (path[end].x, path[end].y)
-#     return correctDirection
-#
+def reversePath(path, destination):
+    end = (destination.x, destination.y)
+    correctDirection = {}
+    while path[end] is not None:
+        correctDirection[(path[end].x, path[end].y)] = end
+        end = (path[end].x, path[end].y)
+    return correctDirection
+
 #
 # def debug(frontier):
 #     frontier = [(frontier[i].x, frontier[i].y) for i in range(len(frontier))]
@@ -416,4 +416,61 @@ def karbpath(gc, unit, loc):
     # print("END OF FUNCTION ")
 
 
+def findNearestKarb(map, loc, gc):
+    if map.on_map(loc):
+        if map.is_passable_terrain_at(loc):
+            frontier = [loc]
+            parents = {(loc.x, loc.y): None}
 
+            while frontier:
+                #print(explored)
+                #debug(frontier)
+                frontier, parents, dest = exploreFrontierKarb(frontier, map, parents, gc)
+                if dest:
+                    break
+            if dest:
+                return reversePath(parents, dest)
+            else:
+                return False
+
+
+def exploreFrontierKarb(frontier, map, parent, gc):
+    newFrontier = []
+    d = bc.Direction.North
+    dest = None
+    for f in frontier:
+        for i in range(8):
+            d = d.rotate_right()
+            newLocation = f.add(d)
+            if map.on_map(newLocation) and (newLocation.x, newLocation.y) not in parent:
+                if map.is_passable_terrain_at(newLocation):
+                    # if not gc.has_unit_at_location(newLocation):
+                    parent[(newLocation.x, newLocation.y)] = f
+                    newFrontier.append(newLocation)
+                    if (newLocation.x, newLocation.y) in Globals.radar.earth_karbonite_locations:
+                        if Globals.radar.earth_karbonite_locations[(newLocation.x, newLocation.y)] != 0:
+                            dest = newLocation
+    return newFrontier, parent, dest
+
+
+def goToKarb(map, unit, gc):
+    loc = unit.location.map_location()
+    if unit.id in Globals.pathsToKarb:
+        if (loc.x, loc.y) in Globals.pathsToKarb[unit.id]:
+            move = Globals.pathsToKarb[unit.id][(loc.x, loc.y)]
+        else:
+            Globals.pathsToKarb[unit.id] = findNearestKarb(map, loc, gc)
+            move = Globals.pathsToKarb[unit.id][(loc.x, loc.y)]
+        dir = loc.direction_to(bc.MapLocation(loc.planet, move[0], move[1]))
+        if gc.can_move(unit.id, dir):
+            gc.move_robot(unit.id, dir)
+            return True
+    else:
+        if findNearestKarb(map, loc, gc):
+            Globals.pathsToKarb[unit.id] = findNearestKarb(map, loc, gc)
+            move = Globals.pathsToKarb[unit.id][(loc.x, loc.y)]
+            dir = loc.direction_to(bc.MapLocation(loc.planet, move[0], move[1]))
+            if gc.can_move(unit.id, dir):
+                gc.move_robot(unit.id, dir)
+                return True
+    return False
