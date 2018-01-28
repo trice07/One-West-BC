@@ -12,9 +12,7 @@ def factory_manager(gc, unit):
     GameController and a unit as inputs.
     """
     global units_produced
-    num_earth_workers = Globals.radar.our_num_earth_workers
     garrison = unit.structure_garrison()  # Gets the unit garrison
-    num_rockets = Globals.radar.our_num_earth_rockets + Globals.radar.our_num_mars_rockets
     if len(garrison) > 0:  # If there is a unit in the garrison or there is less money than required to build a rocket, unload the garrison
         findViableDirection(gc, unit)
     # if gc.round() < 100:  # For the first 100 rounds, produce units consistently
@@ -22,11 +20,13 @@ def factory_manager(gc, unit):
         #     if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
         #         gc.produce_robot(unit.id, bc.UnitType.Mage)
         #         units_produced += 1
+    if Globals.factory_hold:
+        return
     if Globals.radar.our_num_earth_healers < .5*Globals.radar.our_num_earth_rangers:
         if gc.can_produce_robot(unit.id, bc.UnitType.Healer):
             gc.produce_robot(unit.id, bc.UnitType.Healer)
             units_produced += 1
-    else:  # Every six units produce a healer
+    else:
         if gc.can_produce_robot(unit.id, bc.UnitType.Ranger):
             gc.produce_robot(unit.id, bc.UnitType.Ranger)
             units_produced += 1

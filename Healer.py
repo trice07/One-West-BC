@@ -9,11 +9,10 @@ def manage_healers(gc, unit):
     Runs all of the healers. Takes in a GameController object and a unit as
     inputs.
     """
-    nearby_units = None
     enemy_units = []
     location = unit.location
     if unit.location.is_on_map() and not location.is_in_garrison() and gc.is_heal_ready(unit.id):
-        nearby_units = gc.sense_nearby_units(location.map_location(), unit.attack_range())
+        nearby_units = Globals.radar.update_radar(gc, unit, unit.attack_range())
         for patient in nearby_units:
             if unit.team == Globals.them:
                 enemy_units.append(patient)

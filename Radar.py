@@ -230,8 +230,10 @@ class Radar:
                 elif t == bc.UnitType.Healer:
                     self.our_num_earth_healers -= 1
 
-    def update_radar(self, gc, unit):
-        vecunit = gc.sense_nearby_units_by_team(unit.location.map_location(), unit.vision_range, Globals.them)
+    def update_radar(self, gc, unit, range=None):
+        if range is None:
+            range = unit.vision_range
+        vecunit = gc.sense_nearby_units_by_team(unit.location.map_location(), range, Globals.them)
         for enemy in vecunit:
             self.update_enemy_cache(enemy)
         return vecunit
@@ -271,9 +273,13 @@ class Radar:
         if enemy.location.is_on_planet(bc.Planet.Earth):
             cache = self.earth_enemy_locations
             planet = bc.Planet.Earth
+            x_sum = self.enemy_earth_x_sum
+            y_sum = self.enemy_earth_y_sum
         elif enemy.location.is_on_planet(bc.Planet.Mars):
             cache = self.mars_enemy_locations
             planet = bc.Planet.Mars
+            x_sum = self.enemy_mars_x_sum
+            y_sum = self.enemy_mars_y_sum
         else:
             return
         if enemy.id not in cache:
@@ -281,6 +287,13 @@ class Radar:
                 self.update_unit_counts_earth(enemy, "+")
             else:
                 self.update_unit_counts_mars(enemy, "+")
+        else:
+            x, y = self.get_coordinates(cache[enemy.id].location)
+            newx, newy = self.get_coordinates(enemy.location)
+            x_sum -= x
+            y_sum -= y
+            x_sum += newx
+            y_sum += newy
         cache[enemy.id] = enemy
 
     def clear_being_shot_at_cache(self, planet):
@@ -347,19 +360,23 @@ class Radar:
             print("Planet type not specified, make sure planet is a Planet object.")
             return
 
-    def update_karb_amount(self, location, gc):
-        amount = gc.karbonite_at(location)
+    def update_karb_amount(self, gc, location, asteroid=False):
         coords = self.get_coordinates(location)
         if location.planet == bc.Planet.Earth:
+            amount = gc.karbonite_at(location)
             self.earth_map[coords]["karb"] = amount
             if amount == 0:
                 self.earth_karbonite_locations[(location.x, location.y)] = 0
         elif location.planet == bc.Planet.Mars:
-            self.mars_map[coords]["karb"] = amount
-            if amount == 0:
-                self.mars_karbonite_locations[(location.x, location.y)] = 0
-            elif (location.x, location.y) not in self.mars_karbonite_locations:
-                self.mars_karbonite_locations[(location.x, location.y)] = amount
+            if isinstance(asteroid, int):
+                self.mars_map[coords]["karb"] = asteroid
+            else:
+                amount = gc.karbonite_at(location)
+                self.mars_map[coords]["karb"] = amount
+                if amount == 0:
+                    self.mars_karbonite_locations[(location.x, location.y)] = 0
+                elif location not in self.mars_karbonite_locations:
+                    self.mars_karbonite_locations[(location.x, location.y)] = amount
 
     def get_enemy_center(self, planet):
         """

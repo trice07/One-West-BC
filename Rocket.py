@@ -15,26 +15,25 @@ def manage_rockets(gc, unit):
             call_units_to_rocket(gc, unit)
             return
         elif unit.id in Globals.rockets_waiting:
-            to_remove = set()
-            for astronaut in Globals.rockets_waiting[unit.id]["units_ready"]:
-                if gc.can_load(unit.id, astronaut):
-                    gc.load(unit.id, astronaut)
-                    to_remove.add(astronaut)
-            Globals.rockets_waiting[unit.id]["units_ready"] -= to_remove
-            launch = False
+            for astronaut in gc.sense_nearby_units_by_team(location.map_location(), 2, Globals.us):
+                if gc.can_load(unit.id, astronaut.id):
+                    gc.load(unit.id, astronaut.id)
             units_inside = len(unit.structure_garrison())
+            print("UNITS INSIDE", units_inside)
             Globals.rockets_waiting[unit.id]["inside"] = units_inside
             total = Globals.rockets_waiting[unit.id]["total"]
             units_left = total-units_inside
+            launch = False
             if units_left <= Globals.ROCKET_ERROR:
                 Globals.rockets_waiting[unit.id]["turns_til_launch"] -= 1
-                if unit.health < Globals.ROCKET_HEALTH_MIN_IF_ALMOST_FULL:
+                if unit.health < Globals.ROCKET_HEALTH_MIN_IF_ALMOST_FULL or gc.round() > 748:
                     launch = True
             if units_left == 0 or Globals.rockets_waiting[unit.id]["turns_til_launch"] == 0 or unit.health < Globals.ROCKET_HEALTH_MIN or launch:
                 destination = find_landing(gc, unit)
                 if destination is not None:
                     print("LAUNCHING")
                     gc.launch_rocket(unit.id, destination)
+                    del Globals.rockets_queue[Globals.radar.get_coordinates(unit.location)]
     else:
         d = bc.Direction.North
         for i in range(8):
@@ -127,7 +126,7 @@ def call_units_to_rocket(gc, rocket):
             astro_found = []
             count = 0
             while frontier and count < 50:
-                frontier, nauts = exploreFrontier(frontier, map, parents, gc)
+                frontier, nauts, parents = exploreFrontier(frontier, map, parents, gc)
                 astro_found += nauts
                 if len(astro_found) >= 8:
                     break
@@ -136,6 +135,7 @@ def call_units_to_rocket(gc, rocket):
             loc_key = Globals.radar.get_coordinates(start)
             count = 0
             for a in astro_found:
+                print(a.unit_type)
                 if loc_key in q:
                     q[loc_key][a.id] = parents
                 else:
@@ -170,4 +170,4 @@ def exploreFrontier(frontier, map, parent, gc):
                             if unit.team == Globals.us and unit.unit_type not in structs:
                                 nauts.append(unit)
 
-    return newFrontier, nauts
+    return newFrontier, nauts, parent

@@ -17,20 +17,19 @@ def manage_worker(gc, unit):
     loc = unit.location.map_location()
     factory_duty = Globals.workers_factory_duty
     h, bf, br, r, blue, fix = findViableDirection(gc, unit)
-    # print(Globals.income)
     if loc.planet == bc.Planet.Earth:
-        # width = Globals.earth_width
-        # height = Globals.earth_height
 
         if len(blue) != 0:
             gc.build(unit.id, blue[0][0])
             if blue[0][1] in factory_duty and unit.id in factory_duty[blue[0][1]]:
-                del Globals.workers_factory_duty[blue[0][1]][unit.id]
+                # print("made it to factory")
+                del factory_duty[blue[0][1]][unit.id]
             return
 
         for f in factory_duty:
             if unit.id in factory_duty[f] and gc.is_move_ready(unit.id):
-                Navigation.path_with_bfs(gc, unit, factory_duty[f])
+                Navigation.path_with_bfs(gc, unit, factory_duty[f][unit.id])
+                # print("Going towards factory", unit.id)
                 return
 
         if gc.round() > 250:
@@ -39,11 +38,12 @@ def manage_worker(gc, unit):
                 broadcast_building_factory(gc, loc.add(br[0]))
                 return
 
-        if len(r) != 0 and should_replicate():
+        elif len(r) != 0 and should_replicate(gc):
             gc.replicate(unit.id, r[0])
             return
 
         if len(fix) != 0:
+            # print("fixing")
             gc.repair(unit.id, fix[0])
             return
 
@@ -53,13 +53,13 @@ def manage_worker(gc, unit):
             return
 
         if len(h) > 0:
+            # print("harvesting")
             gc.harvest(unit.id, h[0])
-            Globals.radar.update_karb_amount(loc.add(h[0]), gc)
+            Globals.radar.update_karb_amount(gc, loc.add(h[0]))
             return
 
         if gc.is_move_ready(unit.id):
-            # karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
-            # Navigation.Bug(gc, unit, karb)
+            # print("goin to karb")
             Navigation.karbpath(gc, unit, loc)
 
 
@@ -122,21 +122,18 @@ def manage_worker(gc, unit):
 
     # mars worker logic
     elif loc.planet == bc.Planet.Mars:
-        if len(r) != 0 and should_replicate():
-            print("replicating")
+        if len(r) != 0 and should_replicate_mars(gc):
             gc.replicate(unit.id, r[0])
             return
 
         if len(h) > 0:
-            print("harvesting karb")
             gc.harvest(unit.id, h[0])
-            Globals.radar.update_karb_amount(loc.add(h[0]), gc)
+            Globals.radar.update_karb_amount(gc, loc.add(h[0]))
             return
 
-        # if gc.is_move_ready(unit.id):
-        #     print("moving towards karb")
-        #     karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
-        #     Navigation.Bug(gc, unit, karb)
+        if gc.is_move_ready(unit.id):
+            karb_distance, karb = WorkerMovement.findNearestKarb(gc, unit)
+            Navigation.Bug(gc, unit, karb)
 
 
 # def declot(gc, unit, count, width, height, desloc):
@@ -173,6 +170,8 @@ def findViableDirection(gc, unit, d=random.choice(directions)):
         nb = unit.location.map_location().add(d)
         if gc.has_unit_at_location(nb):
             poss = gc.sense_unit_at_location(nb)
+            if poss.team == Globals.them:
+                Globals.radar.update_enemy_cache(poss)
             if poss is not None and (poss.unit_type == bc.UnitType.Factory or poss.unit_type == bc.UnitType.Rocket):
                 if gc.can_build(unit.id, poss.id):
                     blue.append((poss.id, Globals.radar.get_coordinates(nb)))
@@ -207,14 +206,14 @@ def get_closest_workers(gc, start):
             parents = {(start.x, start.y): None}
             w_found = []
             count = 0
+
             while frontier and count < 55:
-                frontier, workers = exploreFrontier(frontier, map, parents, gc)
+                frontier, workers, parents = exploreFrontier(frontier, map, parents, gc)
                 w_found += workers
                 if len(w_found) >= 3:
                     break
                 count += 1
             loc_key = Globals.radar.get_coordinates(start)
-            print(loc_key)
             for i in range(len(w_found)):
                 if loc_key in Globals.workers_factory_duty:
                     Globals.workers_factory_duty[loc_key][w_found[i].id] = parents
@@ -242,12 +241,25 @@ def exploreFrontier(frontier, map, parent, gc):
                             if unit.unit_type == bc.UnitType.Worker and unit.team == Globals.us:
                                 workers.append(unit)
 
-    return newFrontier, workers
+    return newFrontier, workers, parent
 
 
-def should_replicate():
-    limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*4
+def should_replicate(gc):
     workers = Globals.radar.our_num_earth_workers
+    if gc.round() < 125:
+        limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*3
+        if workers <= limit and workers < Globals.MAX_WORKERS:
+            return True
+        return False
+    else:
+        if workers > 5:
+            return False
+        return True
+
+
+def should_replicate_mars(gc):
+    limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*3
+    workers = Globals.radar.our_num_mars_workers
     if workers <= limit and workers < Globals.MAX_WORKERS:
         return True
     return False

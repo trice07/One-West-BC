@@ -12,14 +12,7 @@ def send_radar_info(unit, gc):
 
 def turn(gc, unit):
     result = Units.shoot_at_best_target(gc, unit)
-    if isinstance(result, bc.VecUnit):
-        nearby_enemies = result
-    elif result is None:
-        nearby_enemies = send_radar_info(unit, gc)
-    elif isinstance(result, bc.Unit):
-        return
-    else:
-        print("What the f")
+    if isinstance(result, bc.Unit):
         return
     if gc.is_move_ready(unit.id):
         if ranger_retreat(unit):
@@ -27,10 +20,10 @@ def turn(gc, unit):
             if moved:
                 return
         planet = unit.location.map_location().planet
-        path = Globals.pathToEnemy if planet == bc.Planet.Earth else Globals.pathToEnemyMars
+        path = Globals.updatePath if planet == bc.Planet.Earth else Globals.updatePathMars
         Navigation.path_with_bfs(gc, unit, path)
     return
 
 
 def ranger_retreat(unit):
-    return unit.health <= unit.max_health/10
+    return unit.health <= (unit.max_health/8)

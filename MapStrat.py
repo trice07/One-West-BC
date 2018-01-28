@@ -89,8 +89,8 @@ def exploreKarbFrontier(frontier, map, parent, quadrant):
                     if get_quadrant(map, (newLocation.x, newLocation.y)) == quadrant:
                         parent[(newLocation.x, newLocation.y)] = f
                         newFrontier.append(newLocation)
-                        if (newLocation.x, newLocation.y) in Globals.radar.earth_karbonite_locations:
-                            Globals.radar.earth_karbonite_locations[(newLocation.x, newLocation.y)] = 0
+                        # if (newLocation.x, newLocation.y) in Globals.radar.earth_karbonite_locations:
+                        #     Globals.radar.earth_karbonite_locations[(newLocation.x, newLocation.y)] = 0
     return newFrontier, parent
 
 

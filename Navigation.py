@@ -282,11 +282,8 @@ def path_with_bfs(gc, unit, path):
         if unit.unit_type == bc.UnitType.Worker:
             move_on_path(gc, unit, selfloc, path)
             return
-        if not move_on_path(gc, unit, selfloc, path):
-            if Globals.updatePath:
-                move_on_path(gc, unit, selfloc, Globals.updatePath)
-            else:
-               return
+        if move_on_path(gc, unit, selfloc, path):
+            return
 
             # if not get_back_on_path(gc, unit):
             #     print("can't get on path")
@@ -390,10 +387,11 @@ def karbpath(gc, unit, loc):
             if goTo:
                 move = loc.direction_to(goTo)
                 if try_to_move(gc, unit, move):
+                    # print("THinks its moving")
                     return
         except KeyError:
             continue
-
+    # print("END OF FUNCTION ")
 
 
 
