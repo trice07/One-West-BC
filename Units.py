@@ -136,6 +136,38 @@ def get_best_target_earth_knight(gc, unit):
     if best is not None:
         if best.health <= unit.damage():
             Globals.radar.delete_enemy_from_radar(best)
+            l = Globals.radar.get_coordinates(best.location.map_location())
+            if l in Globals.pathToFactory:
+                del Globals.pathToFactory[l]
+        else:
+            Globals.radar.being_shot_at_earth[best.id] = (best.health - unit.damage())
+        return best
+
+    return target_list
+
+def get_best_target_earth_ranger(gc, unit):
+    """
+    Gets the best target a unit can shoot at on Earth
+    :param gc: GameController
+    :param unit: Unit The player unit
+    :return: Unit or None
+    """
+    target_list = Globals.radar.update_radar(gc, unit)
+    best = None
+    being_shot_at = False
+    for target in target_list:
+        if gc.can_attack(unit.id, target.id):
+            if target.unit_type == bc.UnitType.Knight:
+                best = target
+                break
+            elif target.id in Globals.radar.being_shot_at_earth:
+                being_shot_at = True
+                best = target
+            elif being_shot_at is False:
+                best = target
+    if best is not None:
+        if best.health <= unit.damage():
+            Globals.radar.delete_enemy_from_radar(best)
         else:
             Globals.radar.being_shot_at_earth[best.id] = (best.health - unit.damage())
         return best

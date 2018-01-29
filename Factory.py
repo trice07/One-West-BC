@@ -21,21 +21,39 @@ def factory_manager(gc, unit):
         #         gc.produce_robot(unit.id, bc.UnitType.Mage)
         #         units_produced += 1
     if Globals.everyone_to_mars or Globals.factory_hold:
-        if Globals.radar.our_num_earth_workers < 2:
-            if gc.can_produce_robot(unit.id, bc.UnitType.Worker):
-                gc.produce_robot(unit.id, bc.UnitType.Worker)
+        if Globals.radar.our_num_earth_rockets + Globals.radar.our_num_mars_rockets > 3:
+            if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
+                gc.produce_robot(unit.id, bc.UnitType.Mage)
                 units_produced += 1
+                return
         return
 
-    if Globals.INITIAL_DISTANCE < 10 and (len(Globals.radar.update_radar(gc, unit, 6)) > 0 or gc.round() < 80):
-        if gc.can_produce_robot(unit.id, bc.UnitType.Knight):
-            gc.produce_robot(unit.id, bc.UnitType.Knight)
-            units_produced += 1
-            return
+    if len(Globals.radar.update_radar(gc, unit, 10)) > 0 or gc.round() < 80:
+        if Globals.radar.our_num_earth_mages < 1 and Globals.radar.our_num_earth_rangers > 7:
+            if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
+                gc.produce_robot(unit.id, bc.UnitType.Mage)
+                units_produced += 1
+                return
+        if Globals.radar.our_num_earth_healers < .2*Globals.radar.our_num_earth_knights:
+            if gc.can_produce_robot(unit.id, bc.UnitType.Healer):
+                gc.produce_robot(unit.id, bc.UnitType.Healer)
+                units_produced += 1
+                return
+        else:
+            if gc.can_produce_robot(unit.id, bc.UnitType.Knight):
+                gc.produce_robot(unit.id, bc.UnitType.Knight)
+                units_produced += 1
+                return
 
-    if Globals.radar.our_num_earth_workers < 2 and Globals.radar.our_num_earth_rangers > 3:
-        if gc.can_produce_robot(unit.id, bc.UnitType.Worker):
-            gc.produce_robot(unit.id, bc.UnitType.Worker)
+    # if Globals.radar.our_num_earth_workers < 2 and Globals.radar.our_num_earth_rangers > 3:
+    #     if gc.can_produce_robot(unit.id, bc.UnitType.Worker):
+    #         gc.produce_robot(unit.id, bc.UnitType.Worker)
+    #         units_produced += 1
+    #         return
+
+    if gc.round() > 400:
+        if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
+            gc.produce_robot(unit.id, bc.UnitType.Mage)
             units_produced += 1
             return
 

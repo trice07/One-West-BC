@@ -3,6 +3,7 @@ import random
 import Globals
 import MapStrat
 import Navigation
+import time
 
 directions = list(bc.Direction) # Stores all directions as a list
 random.seed(1) # Random seeding for testing. Will be removed
@@ -21,10 +22,17 @@ def manage_worker(gc, unit):
 
         if Globals.everyone_to_mars:
             if len(br) != 0:
-                print("KARBONITE LEFT")
                 gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
                 broadcast_building_factory(gc, loc.add(br[0]))
                 return
+
+        if Globals.earth_karb_gone:
+            if Globals.radar.our_num_mars_workers == 0:
+                if gc.round() > 275:
+                    if len(br) != 0:
+                        gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
+                        broadcast_building_factory(gc, loc.add(br[0]))
+                    return
 
         if len(blue) != 0:
             gc.build(unit.id, blue[0][0])
@@ -39,9 +47,8 @@ def manage_worker(gc, unit):
                 # print("Going towards factory", unit.id)
                 return
 
-        if gc.round() > 250:
+        if gc.round() > 275:
             if len(br) != 0:
-                print("KARBONITE LEFT", gc.karbonite())
                 gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
                 broadcast_building_factory(gc, loc.add(br[0]))
                 return
@@ -58,6 +65,7 @@ def manage_worker(gc, unit):
         if should_build_factory(gc) and len(bf) > 0:
             gc.blueprint(unit.id, bc.UnitType.Factory, bf[0])
             broadcast_building_factory(gc, loc.add(bf[0]))
+            Globals.factories_being_built += 1
             return
 
         if len(h) > 0:
@@ -66,16 +74,32 @@ def manage_worker(gc, unit):
             Globals.radar.update_karb_amount(gc, loc.add(h[0]))
             return
 
+        # if gc.is_move_ready(unit.id) and len(nb) > 0:
+        #     for d in nb:
+        #         if gc.can_move(unit.id, d):
+        #             gc.move_robot(unit.id, d)
+        #             return
+
+        # t = time.time()
         if gc.is_move_ready(unit.id):
             # print("goin to karb")
-            moved = Navigation.goToKarb(gc.starting_map(loc.planet), unit, gc)
-            if moved:
-                return
+            if Globals.earth_karb_gone or unit.id in Globals.no_karb_around:
+                # print("gone")
+                moved = False
             else:
-                for i in directions:
-                    if gc.can_move(unit.id, i):
-                        gc.move_robot(unit.id, i)
-                        return
+                moved = Navigation.goToKarb(gc.starting_map(loc.planet), unit, gc)
+            if moved:
+                # Globals.worker_look_time += time.time() - t
+                # print(Globals.worker_look_time)
+                return
+            for i in directions:
+                if gc.can_move(unit.id, i):
+                    gc.move_robot(unit.id, i)
+                    # Globals.worker_look_time += time.time() - t
+                    # print(Globals.worker_look_time)
+                    return
+        # Globals.worker_look_time += time.time() - t
+        # print(Globals.worker_look_time)
 
 
     # mars worker logic
@@ -94,14 +118,15 @@ def manage_worker(gc, unit):
             for f in paths:
                 if unit.id in paths[f] and gc.is_move_ready(unit.id):
                     if Navigation.path_with_bfs(gc, unit, paths[f][unit.id]):
-                    # print("Going towards factory", unit.id)
                         return
             loc = Globals.radar.get_coordinates(loc)
             quad = MapStrat.get_quadrant(gc.starting_map(bc.Planet.Mars), loc)
-            if loc in Globals.mars_initial_karb[quad]:
-                if Navigation.path_with_bfs(gc, unit, Globals.mars_initial_karb[quad][loc]):
-                    # print("Going towards factory", unit.id)
+            try:
+                if loc in Globals.mars_initial_karb[quad]:
+                    if Navigation.path_with_bfs(gc, unit, Globals.mars_initial_karb[quad][loc]):
                         return
+            except KeyError:
+                pass
 
             for i in directions:
                 if gc.can_move(unit.id, i):
@@ -128,6 +153,8 @@ def findViableDirection(gc, unit, d=random.choice(directions)):
     blue = []
     fix = []
     center_check = True
+    best_dir = False
+    ml = unit.location.map_location()
     for i in range(8):
         if gc.can_harvest(unit.id, bc.Direction.Center) and center_check:
             h.append(bc.Direction.Center)
@@ -139,13 +166,18 @@ def findViableDirection(gc, unit, d=random.choice(directions)):
         if gc.can_blueprint(unit.id, bc.UnitType.Rocket, d):
             br.append(d)
         if gc.can_replicate(unit.id, d) and should_replicate(gc, unit.id, d):
-            if gc.can_harvest(unit.id, d) and len(r) > 0:
+            if len(r) > 0 and ml.direction_to(Globals.radar.get_enemy_center(ml.planet)) == d:
+                temp = r[0]
+                r[0] = d
+                r.append(temp)
+                best_dir = True
+            elif len(r) > 0 and gc.can_harvest(unit.id, d) and best_dir is False:
                 temp = r[0]
                 r[0] = d
                 r.append(temp)
             else:
                 r.append(d)
-        nb = unit.location.map_location().add(d)
+        nb = ml.add(d)
         if gc.has_unit_at_location(nb):
             poss = gc.sense_unit_at_location(nb)
             if poss.team == Globals.them:
@@ -162,6 +194,7 @@ def findViableDirection(gc, unit, d=random.choice(directions)):
 def should_build_factory(gc):
     if gc.round() >= 1 and gc.karbonite() >= 100 and Globals.radar.our_num_earth_factories < Globals.MAX_FACTORIES:
         return True
+    return False
 
 
 def broadcast_building_factory(gc, factory_location):
@@ -225,10 +258,19 @@ def exploreFrontier(frontier, map, parent, gc):
 def should_replicate(gc, unit_id, d):
     if gc.round() > 750:
         return True
+    if Globals.earth_karb_gone:
+        return False
     workers = Globals.radar.our_num_earth_workers
+    num_fighting_units = Globals.radar.our_num_earth_rangers + Globals.radar.our_num_earth_healers + Globals.radar.our_num_earth_knights
+    if Globals.radar.our_num_earth_factories > 1 and num_fighting_units < 2:
+        return False
     if gc.round() < 125:
-        if gc.can_harvest(unit_id, d):
-            limit = 14
+        if num_fighting_units < 4 and gc.karbonite() < 101:
+            return False
+        if Globals.INITIAL_DISTANCE < 10 and Globals.radar.our_num_earth_workers > 3:
+            limit = 3
+        elif gc.can_harvest(unit_id, d):
+            limit = 10
         else:
             limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*3
         if workers <= limit and workers < Globals.MAX_WORKERS:
@@ -239,13 +281,13 @@ def should_replicate(gc, unit_id, d):
             return False
         return True
 
-
-def should_replicate_mars(gc):
-    limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*3
-    workers = Globals.radar.our_num_mars_workers
-    if workers <= limit and workers < Globals.MAX_WORKERS:
-        return True
-    return False
+#
+# def should_replicate_mars(gc):
+#     limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*3
+#     workers = Globals.radar.our_num_mars_workers
+#     if workers <= limit and workers < Globals.MAX_WORKERS:
+#         return True
+#     return False
 
 
 

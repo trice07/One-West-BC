@@ -426,12 +426,12 @@ def findNearestKarb(map, loc, gc):
                 #print(explored)
                 #debug(frontier)
                 frontier, parents, dest = exploreFrontierKarb(frontier, map, parents, gc)
-                if dest:
+                if dest is not None:
                     break
-            if dest:
-                return reversePath(parents, dest)
+            if dest is not None:
+                return reversePath(parents, dest), dest
             else:
-                return False
+                return False, dest
 
 
 def exploreFrontierKarb(frontier, map, parent, gc):
@@ -454,23 +454,51 @@ def exploreFrontierKarb(frontier, map, parent, gc):
 
 
 def goToKarb(map, unit, gc):
+    if unit.id in Globals.pathsToKarb and Globals.pathsToKarb[unit.id] is False:
+        Globals.no_karb_around[unit.id] = unit
+        if len(Globals.no_karb_around) >= Globals.radar.our_num_earth_workers:
+            Globals.earth_karb_gone = True
+            return False
     loc = unit.location.map_location()
+    if unit.id in Globals.going_to_karb:
+        amount_left = Globals.radar.update_karb_amount(gc, Globals.going_to_karb[unit.id])
+        if amount_left == 0:
+            del Globals.pathsToKarb[unit.id]
+            del Globals.going_to_karb[unit.id]
     if unit.id in Globals.pathsToKarb:
         if (loc.x, loc.y) in Globals.pathsToKarb[unit.id]:
             move = Globals.pathsToKarb[unit.id][(loc.x, loc.y)]
         else:
-            Globals.pathsToKarb[unit.id] = findNearestKarb(map, loc, gc)
+            Globals.pathsToKarb[unit.id], dest = findNearestKarb(map, loc, gc)
+            Globals.going_to_karb[unit.id] = dest
+            if unit.id in Globals.pathsToKarb and Globals.pathsToKarb[unit.id] is False:
+                Globals.no_karb_around[unit.id] = unit
+                if len(Globals.no_karb_around) >= Globals.radar.our_num_earth_workers:
+                    Globals.earth_karb_gone = True
+                    return False
             move = Globals.pathsToKarb[unit.id][(loc.x, loc.y)]
         dir = loc.direction_to(bc.MapLocation(loc.planet, move[0], move[1]))
         if gc.can_move(unit.id, dir):
             gc.move_robot(unit.id, dir)
             return True
     else:
-        if findNearestKarb(map, loc, gc):
-            Globals.pathsToKarb[unit.id] = findNearestKarb(map, loc, gc)
+        n, dest = findNearestKarb(map, loc, gc)
+        if n:
+            Globals.pathsToKarb[unit.id] = n
+            Globals.going_to_karb[unit.id] = dest
+            if unit.id in Globals.pathsToKarb and Globals.pathsToKarb[unit.id] is False:
+                Globals.no_karb_around[unit.id] = unit
+                if len(Globals.no_karb_around) >= Globals.radar.our_num_earth_workers:
+                    Globals.earth_karb_gone = True
+                    return False
             move = Globals.pathsToKarb[unit.id][(loc.x, loc.y)]
             dir = loc.direction_to(bc.MapLocation(loc.planet, move[0], move[1]))
             if gc.can_move(unit.id, dir):
                 gc.move_robot(unit.id, dir)
                 return True
+        else:
+            Globals.no_karb_around[unit.id] = unit
+            if len(Globals.no_karb_around) >= Globals.radar.our_num_earth_workers:
+                Globals.earth_karb_gone = True
+                return False
     return False

@@ -3,6 +3,7 @@ import battlecode as bc
 import Globals
 import Navigation
 import Units
+import time
 
 
 def send_radar_info(unit, gc):
@@ -11,13 +12,17 @@ def send_radar_info(unit, gc):
 
 
 def turn(gc, unit):
+    # t = time.time()
     result = Units.shoot_at_best_target(gc, unit)
+    # Globals.ranger_find_time += time.time() - t
+    # print("find target time", Globals.ranger_find_time)
     if isinstance(result, bc.Unit):
         return
     elif isinstance(result, bc.VecUnit):
         nearby_enemies = result
     else:
         nearby_enemies = send_radar_info(unit, gc)
+    # t = time.time()
     if gc.is_move_ready(unit.id):
         e, should_retreat = ranger_retreat(unit, nearby_enemies)
         if should_retreat:
@@ -28,6 +33,8 @@ def turn(gc, unit):
             planet = unit.location.map_location().planet
             path = Globals.updatePath if planet == bc.Planet.Earth else Globals.updatePathMars
             Navigation.path_with_bfs(gc, unit, path)
+    # Globals.ranger_else_time += time.time() - t
+    # print("other ranger time", Globals.ranger_else_time)
     return
 
 

@@ -35,6 +35,7 @@ Globals.mars_initial_karb = MapStrat.get_paths_to_karb(mars_map)
 Globals.pathToEnemy = Navigation.BFS(earth_map, Globals.radar.get_enemy_center(bc.Planet.Earth), gc)
 Globals.pathToEnemyMars = Navigation.BFS(mars_map, Globals.radar.get_enemy_center(bc.Planet.Mars), gc)
 Globals.INITIAL_DISTANCE = MapStrat.initial_distance()
+
 while True:
     # Start of Turn Updates #
     

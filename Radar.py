@@ -239,6 +239,8 @@ class Radar:
             r = unit.vision_range
         vecunit = gc.sense_nearby_units_by_team(unit.location.map_location(), r, Globals.them)
         for enemy in vecunit:
+            if enemy.unit_type == bc.UnitType.Factory and unit.unit_type == bc.UnitType.Knight and enemy.id not in Globals.pathToFactory:
+                self.get_closest_factory(gc, enemy.location.map_location())
             self.update_enemy_cache(enemy)
         return vecunit
 
@@ -366,20 +368,30 @@ class Radar:
     def update_karb_amount(self, gc, location, asteroid=False):
         coords = self.get_coordinates(location)
         if location.planet == bc.Planet.Earth:
-            amount = gc.karbonite_at(location)
+            try:
+                amount = gc.karbonite_at(location)
+            except:
+                amount = self.earth_map[coords]["karb"]
             self.earth_map[coords]["karb"] = amount
             if amount == 0:
                 self.earth_karbonite_locations[(location.x, location.y)] = 0
         elif location.planet == bc.Planet.Mars:
             if isinstance(asteroid, int):
                 self.mars_map[coords]["karb"] = asteroid
+                amount = asteroid
             else:
-                amount = gc.karbonite_at(location)
+                try:
+                    amount = gc.karbonite_at(location)
+                except:
+                    amount = self.earth_map[coords]["karb"]
                 self.mars_map[coords]["karb"] = amount
                 if amount == 0:
                     self.mars_karbonite_locations[(location.x, location.y)] = 0
                 elif location not in self.mars_karbonite_locations:
                     self.mars_karbonite_locations[(location.x, location.y)] = amount
+        else:
+            amount = 0
+        return amount
 
     def get_enemy_center(self, planet):
         """
@@ -405,7 +417,7 @@ class Radar:
                 return bc.MapLocation(bc.Planet.Mars, Globals.mars_width//2, Globals.mars_height//2)
         else:
             return None
-        if len(cache) == self.enemy_center_found:
+        if len(cache) <= self.enemy_center_found:
             return self.enemy_center
         center_x = 0
         center_y = 0
@@ -433,3 +445,39 @@ class Radar:
             elif len(self.mars_enemy_locations) == 0:
                 return True
         return False
+
+    @staticmethod
+    def get_closest_factory(gc, start, cache=Globals.pathToFactory):
+        map = gc.starting_map(start.planet)
+        d = bc.Direction.North
+        for i in range(8):
+            loc = start.add(d)
+            if map.on_map(loc):
+                if map.is_passable_terrain_at(start):
+                    break
+            start = start.add(d)
+        if map.on_map(start):
+            if map.is_passable_terrain_at(start):
+                frontier = [start]
+                parents = {(start.x, start.y): None}
+
+                while frontier:
+                    frontier, parents = Radar.exploreFrontier(frontier, map, parents, gc)
+                loc_key = Globals.radar.get_coordinates(start)
+                cache[loc_key] = parents
+
+    @staticmethod
+    def exploreFrontier(frontier, map, parent, gc):
+        newFrontier = []
+        d = bc.Direction.North
+        for f in frontier:
+            for i in range(8):
+                d = d.rotate_right()
+                newLocation = f.add(d)
+                if map.on_map(newLocation) and (newLocation.x, newLocation.y) not in parent:
+                    if map.is_passable_terrain_at(newLocation):
+                        if gc.can_sense_location(newLocation):
+                            parent[(newLocation.x, newLocation.y)] = f
+                            newFrontier.append(newLocation)
+
+        return newFrontier, parent
