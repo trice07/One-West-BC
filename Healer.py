@@ -16,6 +16,7 @@ def manage_healers(gc, unit):
     violent_enemies = [bc.UnitType.Ranger, bc.UnitType.Mage, bc.UnitType.Knight]
     if location.is_on_map() and not location.is_in_garrison():
         nearby_units = gc.sense_nearby_units(location.map_location(), unit.vision_range)
+        gc.is_overcharge_ready(unit.id)
         to_heal = None
         retreat_from = None
         found = False

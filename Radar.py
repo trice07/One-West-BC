@@ -436,6 +436,8 @@ class Radar:
         elif enemy.location.is_on_planet(bc.Planet.Mars):
             self.update_unit_counts_mars(enemy, "-")
             del self.mars_enemy_locations[enemy.id]
+        if enemy.id in Globals.pathToFactory:
+            del Globals.pathToFactory[enemy.id]
 
     def check_if_enemies_gone(self, gc, unit):
         if gc.round() > 250:

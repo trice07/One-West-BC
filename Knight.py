@@ -6,9 +6,7 @@ import Units
 
 
 def turn(gc, unit):
-    result = Units.shoot_at_best_target(gc, unit)
-    if isinstance(result, bc.Unit):
-        return
+    Units.shoot_at_best_target(gc, unit)
     if gc.is_move_ready(unit.id):
         planet = unit.location.map_location().planet
         path = get_closest_fact(unit) if planet == bc.Planet.Earth else Globals.updatePathMars

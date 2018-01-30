@@ -28,7 +28,7 @@ def factory_manager(gc, unit):
                 return
         return
 
-    if len(Globals.radar.update_radar(gc, unit, 10)) > 0 or gc.round() < 80:
+    if len(Globals.radar.update_radar(gc, unit, 10)) > 0 or gc.round() < 80 and Globals.INITIAL_DISTANCE < 25:
         if Globals.radar.our_num_earth_mages < 1 and Globals.radar.our_num_earth_rangers > 7:
             if gc.can_produce_robot(unit.id, bc.UnitType.Mage):
                 gc.produce_robot(unit.id, bc.UnitType.Mage)
@@ -62,7 +62,7 @@ def factory_manager(gc, unit):
             gc.produce_robot(unit.id, bc.UnitType.Ranger)
             units_produced += 1
             return
-    if Globals.radar.our_num_earth_healers < .5*Globals.radar.our_num_earth_rangers:
+    if Globals.radar.our_num_earth_healers < .4*Globals.radar.our_num_earth_rangers:
         if gc.can_produce_robot(unit.id, bc.UnitType.Healer):
             gc.produce_robot(unit.id, bc.UnitType.Healer)
             units_produced += 1

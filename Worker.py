@@ -18,13 +18,9 @@ def manage_worker(gc, unit):
     loc = unit.location.map_location()
     factory_duty = Globals.workers_factory_duty
     h, bf, br, r, blue, fix = findViableDirection(gc, unit)
+    done_activity = False
+    moved = False
     if loc.planet == bc.Planet.Earth:
-
-        if Globals.everyone_to_mars:
-            if len(br) != 0:
-                gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
-                broadcast_building_factory(gc, loc.add(br[0]))
-                return
 
         if Globals.earth_karb_gone:
             if Globals.radar.our_num_mars_workers == 0:
@@ -32,47 +28,56 @@ def manage_worker(gc, unit):
                     if len(br) != 0:
                         gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
                         broadcast_building_factory(gc, loc.add(br[0]))
-                    return
+                        done_activity = True
 
-        if len(blue) != 0:
+        if len(blue) != 0 and not done_activity:
             gc.build(unit.id, blue[0][0])
             if blue[0][1] in factory_duty and unit.id in factory_duty[blue[0][1]]:
                 # print("made it to factory")
                 del factory_duty[blue[0][1]][unit.id]
-            return
+            done_activity = True
 
         for f in factory_duty:
             if unit.id in factory_duty[f] and gc.is_move_ready(unit.id):
-                Navigation.path_with_bfs(gc, unit, factory_duty[f][unit.id])
-                # print("Going towards factory", unit.id)
-                return
+                if Navigation.path_with_bfs(gc, unit, factory_duty[f][unit.id]):
+                    moved = True
 
-        if gc.round() > 275:
+        if Globals.everyone_to_mars and not done_activity:
             if len(br) != 0:
                 gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
                 broadcast_building_factory(gc, loc.add(br[0]))
-                return
+                done_activity = True
 
-        elif len(r) != 0:
+        if gc.round() > 275 and not done_activity:
+            if len(br) != 0:
+                gc.blueprint(unit.id, bc.UnitType.Rocket, br[0])
+                broadcast_building_factory(gc, loc.add(br[0]))
+                done_activity = True
+
+        elif len(r) != 0 and not done_activity:
             gc.replicate(unit.id, r[0])
-            return
+            done_activity = True
 
-        if len(fix) != 0:
+        if len(fix) != 0 and not done_activity:
             # print("fixing")
             gc.repair(unit.id, fix[0])
-            return
+            done_activity = True
 
-        if should_build_factory(gc) and len(bf) > 0:
+        if should_build_factory(gc) and len(bf) > 0 and not done_activity:
             gc.blueprint(unit.id, bc.UnitType.Factory, bf[0])
             broadcast_building_factory(gc, loc.add(bf[0]))
             Globals.factories_being_built += 1
-            return
+            done_activity = True
 
-        if len(h) > 0:
+        if len(h) > 0 and not done_activity:
             # print("harvesting")
             gc.harvest(unit.id, h[0])
             Globals.radar.update_karb_amount(gc, loc.add(h[0]))
-            return
+            if len(h) > 1:
+                if gc.can_harvest(unit.id, h[1]):
+                    gc.harvest(unit.id, h[0])
+                    print("HARVESTED TWICE IN ONE TURN")
+            done_activity = True
 
         # if gc.is_move_ready(unit.id) and len(nb) > 0:
         #     for d in nb:
@@ -81,23 +86,23 @@ def manage_worker(gc, unit):
         #             return
 
         # t = time.time()
-        if gc.is_move_ready(unit.id):
+        if gc.is_move_ready(unit.id) and not moved:
             # print("goin to karb")
             if Globals.earth_karb_gone or unit.id in Globals.no_karb_around:
                 # print("gone")
-                moved = False
+                moved_towards_karb = False
             else:
-                moved = Navigation.goToKarb(gc.starting_map(loc.planet), unit, gc)
-            if moved:
+                moved_towards_karb = Navigation.goToKarb(gc.starting_map(loc.planet), unit, gc)
+            if moved_towards_karb:
                 # Globals.worker_look_time += time.time() - t
                 # print(Globals.worker_look_time)
                 return
-            for i in directions:
-                if gc.can_move(unit.id, i):
-                    gc.move_robot(unit.id, i)
-                    # Globals.worker_look_time += time.time() - t
-                    # print(Globals.worker_look_time)
-                    return
+            # for i in directions:
+            #     if gc.can_move(unit.id, i):
+            #         gc.move_robot(unit.id, i)
+            #         # Globals.worker_look_time += time.time() - t
+            #         # print(Globals.worker_look_time)
+            #         return
         # Globals.worker_look_time += time.time() - t
         # print(Globals.worker_look_time)
 
@@ -262,7 +267,7 @@ def should_replicate(gc, unit_id, d):
         return False
     workers = Globals.radar.our_num_earth_workers
     num_fighting_units = Globals.radar.our_num_earth_rangers + Globals.radar.our_num_earth_healers + Globals.radar.our_num_earth_knights
-    if Globals.radar.our_num_earth_factories > 1 and num_fighting_units < 2:
+    if Globals.radar.our_num_earth_factories > 0 and num_fighting_units < 2:
         return False
     if gc.round() < 125:
         if num_fighting_units < 4 and gc.karbonite() < 101:
@@ -270,9 +275,9 @@ def should_replicate(gc, unit_id, d):
         if Globals.INITIAL_DISTANCE < 10 and Globals.radar.our_num_earth_workers > 3:
             limit = 3
         elif gc.can_harvest(unit_id, d):
-            limit = 10
+            limit = 7
         else:
-            limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*3
+            limit = Globals.BEGINNING_WORKER_LIMIT + Globals.radar.our_num_earth_factories*2
         if workers <= limit and workers < Globals.MAX_WORKERS:
             return True
         return False
